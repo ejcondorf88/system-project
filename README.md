@@ -1,33 +1,70 @@
-# Sistema de Autenticación Full Stack
+# 🏋️‍♂️ M-Lifting: Tu Asistente Personal de Gimnasio con IA
 
-Este proyecto implementa un sistema de autenticación completo con un backend en FastAPI y un frontend en React.
+M-Lifting es una plataforma innovadora que combina inteligencia artificial con entrenamiento físico para ofrecer una experiencia personalizada en el gimnasio. Nuestra aplicación no solo gestiona tu membresía, sino que también actúa como tu entrenador personal virtual.
 
-## 🚀 Características
+## ✨ Características Destacadas
 
-### Backend (FastAPI)
-- Registro de usuarios
-- Inicio de sesión con JWT
-- Validación de datos con Pydantic
-- Base de datos PostgreSQL
-- Arquitectura en capas (API, Servicios, Repositorios)
-- Seguridad con bcrypt para contraseñas
-- CORS configurado
-- Documentación automática con Swagger/ReDoc
+### 🤖 Asistente IA
+- Análisis personalizado de tu forma física
+- Recomendaciones de ejercicios adaptadas a tus objetivos
+- Seguimiento de progreso con IA
+- Detección de posturas incorrectas mediante visión por computadora
+- Planes de entrenamiento dinámicos que se adaptan a tu progreso
 
-### Frontend (React)
-- Interfaz moderna y responsiva
-- Gestión de estado con React Context
-- Formularios validados
-- Manejo de tokens JWT
-- Protección de rutas
-- Diseño adaptable a diferentes dispositivos
+### 💪 Gestión de Membresía
+- Sistema de prueba gratuita de 15 días
+- Planes de suscripción flexibles
+- Acceso a contenido premium
+- Seguimiento de asistencia
+- Reserva de clases y equipos
+
+### 📱 Frontend (React + Vite)
+- Interfaz moderna con diseño Material UI
+- Modo oscuro/claro
+- Animaciones fluidas y transiciones suaves
+- Diseño responsivo para todos los dispositivos
+- PWA (Progressive Web App) para acceso offline
+- Gráficos interactivos de progreso
+- Calendario de entrenamientos
+- Chat en tiempo real con el asistente IA
+
+### 🔧 Backend (FastAPI)
+- API RESTful de alto rendimiento
+- Autenticación JWT segura
+- Integración con servicios de IA
+- Sistema de notificaciones en tiempo real
+- Análisis de datos de entrenamiento
+- Gestión de membresías y pagos
+- Documentación automática con Swagger
+
+## 🚀 Tecnologías Principales
+
+### Frontend
+- React 18
+- Vite
+- Material UI
+- Redux Toolkit
+- React Query
+- Socket.io Client
+- Chart.js
+- Framer Motion
+
+### Backend
+- FastAPI
+- PostgreSQL
+- Redis
+- TensorFlow/PyTorch
+- OpenCV
+- Celery
+- WebSockets
 
 ## 📋 Prerrequisitos
 
 ### Backend
 - Python 3.8+
 - PostgreSQL
-- pip (gestor de paquetes de Python)
+- Redis
+- pip
 
 ### Frontend
 - Node.js 16+
@@ -59,13 +96,16 @@ pip install -r requirements.txt
 ```
 
 4. Configurar la base de datos:
-   - Crear una base de datos PostgreSQL llamada `auth_db`
-   - Ajustar la URL de la base de datos en `backend/src/config/settings.py` si es necesario
+   - Crear una base de datos PostgreSQL
+   - Configurar Redis para caché y WebSockets
+   - Ajustar las variables de entorno
 
 5. Crear archivo `.env` en el directorio backend:
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/auth_db
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mlifting_db
+REDIS_URL=redis://localhost:6379
 SECRET_KEY=tu_clave_secreta_muy_segura
+AI_MODEL_PATH=/path/to/model
 ```
 
 ### Frontend
@@ -85,6 +125,8 @@ yarn install
 3. Crear archivo `.env` en el directorio frontend:
 ```env
 VITE_API_URL=http://localhost:8000/api
+VITE_WS_URL=ws://localhost:8000/ws
+VITE_AI_ENDPOINT=http://localhost:8000/api/ai
 ```
 
 ## 🚀 Ejecución
@@ -114,51 +156,56 @@ yarn dev
 2. Acceder a la aplicación:
    - Frontend: http://localhost:5173
 
-## 📚 Endpoints del Backend
+## 📱 Características de la Aplicación
 
-### Registro de Usuario
-- **POST** `/api/auth/register`
-- Body:
-```json
-{
-    "username": "usuario",
-    "email": "usuario@ejemplo.com",
-    "password": "contraseña",
-    "confirm_password": "contraseña"
-}
-```
+### Sistema de Prueba Gratuita
+- 15 días de acceso completo
+- Tutorial interactivo
+- Evaluación inicial de condición física
+- Plan de entrenamiento personalizado
+- Acceso a todas las funciones premium
 
-### Inicio de Sesión
-- **POST** `/api/auth/login`
-- Body:
-```json
-{
-    "username": "usuario",
-    "password": "contraseña"
-}
-```
+### Asistente IA
+- Análisis de ejercicios en tiempo real
+- Corrección de postura
+- Recomendaciones personalizadas
+- Seguimiento de progreso
+- Adaptación dinámica de rutinas
+
+### Gestión de Usuario
+- Perfil personalizado
+- Historial de entrenamientos
+- Métricas de progreso
+- Objetivos y logros
+- Sistema de recompensas
 
 ## 🏗️ Estructura del Proyecto
 
 ```
-proyecto/
+mlifting/
 ├── backend/
 │   ├── src/
 │   │   ├── api/
-│   │   │   └── auth.py
+│   │   │   ├── auth.py
+│   │   │   ├── ai.py
+│   │   │   └── membership.py
 │   │   ├── config/
 │   │   │   └── settings.py
 │   │   ├── core/
-│   │   │   └── security.py
+│   │   │   ├── security.py
+│   │   │   └── ai_engine.py
 │   │   ├── database/
 │   │   │   ├── database.py
 │   │   │   └── models.py
 │   │   ├── repositories/
-│   │   │   └── user_repository.py
+│   │   │   ├── user_repository.py
+│   │   │   └── workout_repository.py
 │   │   ├── schemas/
-│   │   │   └── user.py
+│   │   │   ├── user.py
+│   │   │   └── workout.py
 │   │   ├── services/
-│   │   │   └── auth_service.py
+│   │   │   ├── auth_service.py
+│   │   │   └── ai_service.py
 │   │   └── main.py
 │   ├── requirements.txt
 │   └── .env
@@ -166,10 +213,23 @@ proyecto/
 └── frontend/
     ├── src/
     │   ├── components/
+    │   │   ├── ai/
+    │   │   ├── auth/
+    │   │   ├── dashboard/
+    │   │   └── workout/
     │   ├── pages/
+    │   │   ├── Home/
+    │   │   ├── Dashboard/
+    │   │   └── Workout/
     │   ├── context/
+    │   │   ├── AuthContext.jsx
+    │   │   └── AIContext.jsx
     │   ├── services/
+    │   │   ├── api.js
+    │   │   └── ai.js
     │   ├── utils/
+    │   │   ├── ai.js
+    │   │   └── workout.js
     │   ├── App.jsx
     │   └── main.jsx
     ├── public/
@@ -180,16 +240,18 @@ proyecto/
 ## 🔒 Seguridad
 
 ### Backend
-- Las contraseñas se almacenan hasheadas con bcrypt
-- Tokens JWT para autenticación
-- Validación de datos con Pydantic
+- Autenticación JWT
+- Encriptación de datos sensibles
 - Protección contra ataques comunes
+- Validación de datos
+- Rate limiting
 
 ### Frontend
 - Almacenamiento seguro de tokens
 - Protección de rutas
 - Validación de formularios
 - Manejo seguro de credenciales
+- HTTPS forzado
 
 ## 🤝 Contribución
 

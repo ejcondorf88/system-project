@@ -2,12 +2,19 @@ import { useState } from 'react';
 import type { RegisterCredentials } from '@/adapters/auth.adapter';
 import authAdapter from '@/adapters/auth.adapter';
 
-interface FormErrors extends Partial<RegisterCredentials> {
-  submit?: string;
+interface FormData {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
 }
 
 interface UseRegisterFormReturn {
-  formData: RegisterCredentials;
+  formData: FormData;
   errors: FormErrors;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
@@ -15,7 +22,7 @@ interface UseRegisterFormReturn {
 }
 
 export const useRegisterForm = (): UseRegisterFormReturn => {
-  const [formData, setFormData] = useState<RegisterCredentials>({
+  const [formData, setFormData] = useState<FormData>({
     username: '',
     email: '',
     password: '',
@@ -59,10 +66,10 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
       ...prev,
       [name]: value
     }));
-    if (errors[name as keyof RegisterCredentials]) {
+    if (errors[name]) {
       setErrors(prev => ({
         ...prev,
-        [name]: undefined
+        [name]: ""
       }));
     }
   };
@@ -76,7 +83,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
 
     setIsLoading(true);
     try {
-      const response = await authAdapter.register(formData);
+      const response = await authAdapter.register(formData as RegisterCredentials);
       console.log('Registro exitoso:', response);
       // Aquí podrías redirigir al usuario o mostrar un mensaje de éxito
     } catch (error) {
