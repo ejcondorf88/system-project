@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { RegisterCredentials } from '@/adapters/auth.adapter';
 import authAdapter from '@/adapters/auth.adapter';
 
@@ -30,6 +31,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate(); // <-- Nuevo
 
   const validateForm = (): boolean => {
     const newErrors: Partial<RegisterCredentials> = {};
@@ -76,7 +78,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -85,7 +87,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
     try {
       const response = await authAdapter.register(formData as RegisterCredentials);
       console.log('Registro exitoso:', response);
-      // Aquí podrías redirigir al usuario o mostrar un mensaje de éxito
+      navigate('/chat'); // <-- Redirige después de éxito
     } catch (error) {
       console.error('Error en el registro:', error);
       if (error instanceof Error) {
@@ -106,4 +108,4 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
     handleSubmit,
     isLoading
   };
-}; 
+};

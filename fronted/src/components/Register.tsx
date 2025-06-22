@@ -9,6 +9,7 @@ import { RocketLaunchIcon } from "@heroicons/react/24/outline";
 
 export const Register = () => {
   const { formData, isLoading, handleChange, handleSubmit } = useRegisterForm();
+  console.log(`Los valores que se van a enviar son ${JSON.stringify(formData)}`)
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-4 sm:px-6 lg:px-8 relative overflow-hidden">

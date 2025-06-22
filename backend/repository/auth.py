@@ -7,11 +7,12 @@ from passlib.context import CryptContext
 from db.models import User
 from schemas.user import UserCreate
 from tokenJWT import create_access_token
-
+from db.models import User
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "tu_clave_secreta_aqui"  # En producción, usar una clave segura
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+import bcrypt
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
@@ -47,7 +48,47 @@ def auth_user(db: Session, username: str, password: str) -> Optional[User]:
     print("=== FIN DEL PROCESO DE AUTENTICACIÓN ===")
     return user
 
-def register_user(db: Session, user_data: UserCreate) -> User:
+def register_user(db: Session, user: UserCreate):
+    # Verificar si el usuario ya existe
+    existing_user = db.query(User).filter(
+        (User.username == user.username) | (User.email == user.email)
+    ).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="El nombre de usuario o correo ya está registrado"
+        )
+
+    # Crear nuevo usuario
+    hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')  # Hashear la contraseña
+    db_user = User(
+        username=user.username,
+        email=user.email,
+        password=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user    # Verificar si el usuario ya existe
+    existing_user = db.query(UserModel).filter(
+        (UserModel.username == user.username) | (UserModel.email == user.email)
+    ).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="El nombre de usuario o correo ya está registrado"
+        )
+
+    # Crear nuevo usuario
+    db_user = UserModel(
+        username=user.username,
+        email=user.email,
+        password=user.password  # Aplica hash aquí, ej: bcrypt.hash(user.password)
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
     print(f"=== INICIO DEL PROCESO DE REGISTRO ===")
     print(f"1. Verificando usuario existente: {user_data.username}")
     

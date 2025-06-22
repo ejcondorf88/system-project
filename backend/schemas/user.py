@@ -2,19 +2,17 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
-
-# Esquema para crear usuario
+# Esquema base para usuario
 class UserBase(BaseModel):
     username: str
-    email: str
-    nombre: str
-    apellido: str
-    direccion: Optional[str] = None
-    telefono: int
+    email: EmailStr
 
+# Esquema para crear usuario
 class UserCreate(UserBase):
     password: str
+    confirmPassword: str  # Agrega confirmPassword
 
+# Esquema para usuario completo
 class User(UserBase):
     id: int
     creacion: datetime
@@ -23,12 +21,13 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
+# Resto de los esquemas sin cambios
 class UserId(BaseModel):
-    id:int
+    id: int
 
 class Login(BaseModel):
     username: str
-    password:str
+    password: str
 
 class Token(BaseModel):
     access_token: str
