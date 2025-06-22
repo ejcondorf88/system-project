@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaMedal } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const user = {
   name: 'Nombre de Usuario',
@@ -18,6 +19,8 @@ const levelColors: Record<string, string> = {
 };
 
 export const Profile = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
       {/* Fondo animado */}
@@ -92,11 +95,11 @@ export const Profile = () => {
         </motion.div>
       </main>
 
-      {/* Barra de navegación inferior */}
+      {/* Barra de navegación inferior fija */}
       <nav className="w-full max-w-md grid grid-cols-3 gap-0 fixed bottom-0 left-1/2 -translate-x-1/2 bg-white/10 rounded-t-2xl border-t border-white/20 overflow-hidden shadow-lg z-30">
-        <button className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors">Rutinas</button>
-        <button className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors border-l border-r border-white/20">Chat</button>
-        <button className="py-3 text-orange-400 font-semibold text-base bg-orange-500/20 transition-colors border-l border-white/20">Mi perfil</button>
+        <button onClick={() => navigate('/routines')} className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors">Rutinas</button>
+        <button onClick={() => navigate('/chat')} className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors border-l border-r border-white/20">Chat</button>
+        <button onClick={() => navigate('/profile')} className="py-3 text-orange-400 font-semibold text-base bg-orange-500/20 transition-colors border-l border-white/20">Mi perfil</button>
       </nav>
     </div>
   );

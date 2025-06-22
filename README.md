@@ -112,7 +112,7 @@ AI_MODEL_PATH=/path/to/model
 
 1. Navegar al directorio del frontend:
 ```bash
-cd frontend
+cd fronted
 ```
 
 2. Instalar dependencias:
@@ -147,7 +147,7 @@ uvicorn src.main:app --reload
 
 1. Iniciar el servidor de desarrollo:
 ```bash
-cd frontend
+cd fronted
 npm run dev
 # o
 yarn dev
@@ -181,60 +181,51 @@ yarn dev
 
 ## 🏗️ Estructura del Proyecto
 
+Aquí tienes una vista simplificada de la estructura de carpetas del proyecto:
+
 ```
-mlifting/
+/
 ├── backend/
-│   ├── src/
-│   │   ├── api/
-│   │   │   ├── auth.py
-│   │   │   ├── ai.py
-│   │   │   └── membership.py
-│   │   ├── config/
-│   │   │   └── settings.py
-│   │   ├── core/
-│   │   │   ├── security.py
-│   │   │   └── ai_engine.py
-│   │   ├── database/
-│   │   │   ├── database.py
-│   │   │   └── models.py
-│   │   ├── repositories/
-│   │   │   ├── user_repository.py
-│   │   │   └── workout_repository.py
-│   │   ├── schemas/
-│   │   │   ├── user.py
-│   │   │   └── workout.py
-│   │   ├── services/
-│   │   │   ├── auth_service.py
-│   │   │   └── ai_service.py
-│   │   └── main.py
-│   ├── requirements.txt
-│   └── .env
+│   ├── db/
+│   │   ├── database.py
+│   │   └── models.py
+│   ├── repository/
+│   │   ├── auth.py
+│   │   └── user.py
+│   ├── routes/
+│   │   ├── auth.py
+│   │   └── user.py
+│   ├── schemas/
+│   │   └── user.py
+│   ├── templates/
+│   │   ├── dashboard.html
+│   │   └── index.html
+│   ├── hashing.py
+│   ├── main.py
+│   ├── oauth.py
+│   ├── tokenJWT.py
+│   └── requirements.txt
 │
-└── frontend/
+└── fronted/
     ├── src/
+    │   ├── adapters/
+    │   │   ├── api.ts
+    │   │   └── auth.adapter.ts
     │   ├── components/
-    │   │   ├── ai/
-    │   │   ├── auth/
-    │   │   ├── dashboard/
-    │   │   └── workout/
-    │   ├── pages/
-    │   │   ├── Home/
-    │   │   ├── Dashboard/
-    │   │   └── Workout/
-    │   ├── context/
-    │   │   ├── AuthContext.jsx
-    │   │   └── AIContext.jsx
-    │   ├── services/
-    │   │   ├── api.js
-    │   │   └── ai.js
-    │   ├── utils/
-    │   │   ├── ai.js
-    │   │   └── workout.js
-    │   ├── App.jsx
-    │   └── main.jsx
-    ├── public/
+    │   │   ├── Chat.tsx
+    │   │   ├── Login.tsx
+    │   │   ├── Profile.tsx
+    │   │   └── Register.tsx
+    │   ├── hooks/
+    │   │   ├── useAuth.ts
+    │   │   ├── useChat.ts
+    │   │   └── useRegisterForm.ts
+    │   ├── routes/
+    │   │   └── AppRouter.tsx
+    │   ├── App.tsx
+    │   └── main.tsx
     ├── package.json
-    └── .env
+    └── vite.config.ts
 ```
 
 ## 🔒 Seguridad

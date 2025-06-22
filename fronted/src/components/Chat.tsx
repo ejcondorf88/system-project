@@ -1,9 +1,11 @@
 import React, { useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useChat } from '../hooks/useChat';
 
 export const Chat = () => {
   const { messages, input, setInput, sendMessage, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -77,9 +79,9 @@ export const Chat = () => {
 
       {/* Barra de navegación inferior fija */}
       <nav className="w-full max-w-md grid grid-cols-3 gap-0 fixed bottom-0 left-1/2 -translate-x-1/2 bg-white/10 rounded-t-2xl border-t border-white/20 overflow-hidden shadow-lg z-30">
-        <button className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors">Rutinas</button>
-        <button className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors border-l border-r border-white/20">Chat</button>
-        <button className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors">Mi perfil</button>
+        <button onClick={() => navigate('/routines')} className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors">Rutinas</button>
+        <button onClick={() => navigate('/chat')} className="py-3 text-orange-400 font-semibold text-base bg-orange-500/20 transition-colors border-l border-r border-white/20">Chat</button>
+        <button onClick={() => navigate('/profile')} className="py-3 text-white font-semibold text-base hover:bg-orange-500/30 transition-colors">Mi perfil</button>
       </nav>
     </div>
   );
