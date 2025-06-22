@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api'; // Ajusta esto según tu URL de API
+const API_URL = 'http://localhost:8080/api'; // URL actualizada del backend
 
 export interface LoginCredentials {
   username: string;
