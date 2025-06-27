@@ -1,8 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db.database import Base, engine
+from database.database import Base, engine
 from routes import auth, user
+from api import chat
 
 
 # Crear las tablas en la base de datos
@@ -27,8 +28,9 @@ app.add_middleware(
 )
 
 # Rutas
-app.include_router(auth.router, prefix="/api/auth/auth", tags=["auth"])
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(user.router, prefix="/api/users", tags=["users"])
+app.include_router(chat.router, prefix="/api", tags=["chat"])
 
 @app.get("/")
 def read_root():
