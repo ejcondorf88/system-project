@@ -3,10 +3,10 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/auth_db"
+    DATABASE_URL: str = "postgresql://postgres:12345@localhost:5432/auth_db"
     
     # JWT
-    SECRET_KEY: str = "tu_clave_secreta_muy_segura"  # En producción, usar una clave segura
+    SECRET_KEY: str = "12345"  # En producción, usar una clave segura
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     

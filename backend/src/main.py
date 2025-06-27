@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .api import auth
+from .api import chat
 from .config.settings import settings
 from .database.database import engine
 from .database.models import Base
@@ -20,4 +21,5 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(auth.router, prefix="/api") 
+app.include_router(auth.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
