@@ -23,12 +23,14 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
+    console.log('useAuth: ejecutando checkAuth');
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('token');
+      console.log('checkAuth: token en localStorage:', token);
       if (!token) {
         setAuthState(prev => ({ ...prev, isLoading: false }));
         return;
@@ -41,6 +43,7 @@ export const useAuth = () => {
         isLoading: false,
         error: null,
       });
+      console.log('checkAuth: usuario cargado', user);
     } catch (error) {
       setAuthState({
         user: null,
@@ -49,6 +52,7 @@ export const useAuth = () => {
         error: 'Error al verificar la autenticación',
       });
       localStorage.removeItem('token');
+      console.log('checkAuth: error, token eliminado');
     }
   };
 

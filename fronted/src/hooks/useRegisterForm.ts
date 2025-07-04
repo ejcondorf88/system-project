@@ -31,7 +31,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate(); // <-- Nuevo
+  const navigate = useNavigate();
 
   const validateForm = (): boolean => {
     const newErrors: Partial<RegisterCredentials> = {};
@@ -87,7 +87,19 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
     try {
       const response = await authAdapter.register(formData as RegisterCredentials);
       console.log('Registro exitoso:', response);
-      navigate('/chat'); // <-- Redirige después de éxito
+      if (response.access_token) {
+        localStorage.setItem('token', response.access_token);
+        setTimeout(() => {
+          navigate('/chat');
+        }, 100);
+      } else if (response.token) {
+        localStorage.setItem('token', response.token);
+        setTimeout(() => {
+          navigate('/chat');
+        }, 100);
+      } else {
+        navigate('/chat');
+      }
     } catch (error) {
       console.error('Error en el registro:', error);
       if (error instanceof Error) {

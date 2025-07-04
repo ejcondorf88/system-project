@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { LoginCredentials } from '@/adapters/auth.adapter';
 import authAdapter from '@/adapters/auth.adapter';
 
@@ -21,6 +22,7 @@ export const useLoginForm = (): UseLoginFormReturn => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -64,7 +66,19 @@ export const useLoginForm = (): UseLoginFormReturn => {
     try {
       const response = await authAdapter.login(formData);
       console.log('Login exitoso:', response);
-      // Aquí podrías guardar el token y redirigir al usuario
+      if (response.access_token) {
+        localStorage.setItem('token', response.access_token);
+        setTimeout(() => {
+          navigate('/chat');
+        }, 100);
+      } else if (response.token) {
+        localStorage.setItem('token', response.token);
+        setTimeout(() => {
+          navigate('/chat');
+        }, 100);
+      } else {
+        navigate('/chat');
+      }
     } catch (error) {
       console.error('Error en el login:', error);
       if (error instanceof Error) {

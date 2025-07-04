@@ -7,6 +7,9 @@ from typing import Optional
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from schemas.user import TokenData
+from database.database import get_db
+from database.models import User
+from sqlalchemy.orm import Session
 
 # Configuración de encriptación de contraseñas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -47,11 +50,21 @@ def verify_token(token: str, credentials_exception):
     except InvalidTokenError:
         raise credentials_exception
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     """Obtiene el usuario actual basado en el token"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    return verify_token(token, credentials_exception) 
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except Exception:
+        raise credentials_exception
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise credentials_exception
+    return user 

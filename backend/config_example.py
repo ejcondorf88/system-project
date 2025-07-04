@@ -14,4 +14,8 @@ DATABASE_URL=postgresql://postgres.wwwanszaadvicyfkudaj:Pigo0173!@aws-0-us-west-
 SECRET_KEY=tu_clave_secreta_aqui_cambiala_en_produccion
 
 # Configuración de CORS
-ALLOWED_ORIGINS=["http://localhost:5173","http://localhost:8080","http://127.0.0.1:5173","http://127.0.0.1:8080"] 
+ALLOWED_ORIGINS=["http://localhost:5173","http://localhost:8080","http://127.0.0.1:5173","http://127.0.0.1:8080"]
+
+# Configuración de IA
+OPENAI_API_KEY=tu_clave_de_openai_aqui
+PINECONE_API_KEY=pcsk_6FECK2_AZPddmaoWkDJxqaWGyoN8HsfsJXe67WHWtMoBSJkhZiaCQ58KDMgZJXHA2sqBWv 

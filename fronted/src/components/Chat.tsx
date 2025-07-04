@@ -54,6 +54,7 @@ export const Chat = () => {
         className="w-full max-w-md fixed bottom-16 left-1/2 -translate-x-1/2 px-2 flex items-center gap-2 z-20"
         onSubmit={e => {
           e.preventDefault();
+          console.log("Submit presionado");
           sendMessage();
         }}
       >

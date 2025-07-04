@@ -9,10 +9,7 @@ from datetime import timedelta
 from core.security import create_access_token
 from fastapi import APIRouter, HTTPException, status, Depends, Response
 from sqlalchemy.orm import Session
-router = APIRouter(
-    prefix = "/auth",
-    tags= ["Auth"]
-)
+router = APIRouter(tags=["auth"])
 
 @router.post("/login", response_model=UserResponse)
 def login(username: str, password: str, db: Session = Depends(get_db)):

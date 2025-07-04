@@ -46,7 +46,7 @@ const chatAdapter = {
         timestamp: Date.now(),
       };
 
-      // Crear la respuesta de la IA (asumiendo que la API retorna la respuesta)
+      // Crear la respuesta de la IA usando el campo 'message' de la respuesta
       const aiMessage: ChatMessage = {
         id: Math.random().toString(36).slice(2),
         sender: 'ia',

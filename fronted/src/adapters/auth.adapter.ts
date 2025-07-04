@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api'; // URL actualizada del backend
+const API_URL = 'http://localhost:8080/api'; // URL actualizada del backend
 
 export interface LoginCredentials {
   username: string;
@@ -13,7 +13,8 @@ export interface RegisterCredentials extends LoginCredentials {
 }
 
 export interface AuthResponse {
-  token: string;
+  token?: string;
+  access_token?: string;
   user: {
     id: string;
     username: string;
@@ -37,7 +38,7 @@ const authAdapter = {
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
     try {
       console.log(`Los datos que se van a enviar al backendo son ${credentials}`)
-      const response = await axios.post(`${API_URL}/auth/auth/auth/register`, credentials);
+      const response = await axios.post(`${API_URL}/auth/register`, credentials);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
