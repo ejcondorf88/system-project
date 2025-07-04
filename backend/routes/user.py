@@ -1,15 +1,15 @@
 from typing import List
 
 from fastapi import APIRouter,Depends
-from db.database import get_db
+from database.database import get_db
 from sqlalchemy.orm import Session
-from db import models
+from database import models
 from passlib.context import CryptContext
 
-from oauth import get_current_user
+from core.security import get_current_user
 from repository import user
 from fastapi import HTTPException,status
-from db.models import User
+from database.models import User
 from schemas.user import UserCreate
 
 router = APIRouter(

@@ -4,20 +4,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from database.database import Base, engine
 from routes import auth, user
 from api import chat
+from config.settings import settings
 
 
 # Crear las tablas en la base de datos
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+    print("✅ Tablas creadas exitosamente")
+except Exception as e:
+    print(f"❌ Error al crear las tablas: {e}")
+    print("Verifica las credenciales de la base de datos en config/settings.py")
 
 app = FastAPI(title="API de Gestión de Tareas")
 
 # Configuración de CORS
-origins = [
-    "http://localhost:5173",  # Frontend en desarrollo
-    "http://localhost:8080",  # Backend
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:8080",
-]
+origins = settings.ALLOWED_ORIGINS
 
 app.add_middleware(
     CORSMiddleware,

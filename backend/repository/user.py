@@ -2,8 +2,8 @@
 from fastapi.openapi.utils import status_code_ranges
 from sqlalchemy.orm import Session
 from fastapi import HTTPException,status
-from hashing import Hash
-from db import models
+from core.security import hash_password
+from database import models
 
 
 def crear_usuario(user,db:Session):
@@ -12,12 +12,8 @@ def crear_usuario(user,db:Session):
 
         new_user = models.User(
             username=usuario["username"],
-            password=Hash.hash_password(usuario["password"]),
-            nombre=usuario["nombre"],
-            apellido=usuario["apellido"],
-            direccion=usuario["direccion"],
-            telefono=usuario["telefono"],
-            correo=usuario["correo"],
+            password=hash_password(usuario["password"]),
+            email=usuario["email"]
         )
         # agragamos
         db.add(new_user)
