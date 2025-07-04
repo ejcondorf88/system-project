@@ -35,6 +35,12 @@ export const apiAdapter = {
     const response = await api.get('/users/me');
     return response.data;
   },
+
+  // Métodos para chat
+  sendChatMessage: async (messageData: { message: string; user_id: number; timestamp: string }) => {
+    const response = await api.post('/chat/send', messageData);
+    return response.data;
+  },
 };
 
 export default apiAdapter; 
