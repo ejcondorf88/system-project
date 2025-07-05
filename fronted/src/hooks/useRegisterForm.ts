@@ -6,6 +6,7 @@ import authAdapter from '@/adapters/auth.adapter';
 interface FormData {
   username: string;
   email: string;
+  phone: string;
   password: string;
   confirmPassword: string;
 }
@@ -26,6 +27,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
   const [formData, setFormData] = useState<FormData>({
     username: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });

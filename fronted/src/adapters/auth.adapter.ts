@@ -9,6 +9,7 @@ export interface LoginCredentials {
 
 export interface RegisterCredentials extends LoginCredentials {
   email: string;
+  phone?: string;
   confirmPassword: string;
 }
 

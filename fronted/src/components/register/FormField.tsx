@@ -1,4 +1,4 @@
-import { UserIcon, EnvelopeIcon, LockClosedIcon, KeyIcon } from '@heroicons/react/24/outline';
+import { UserIcon, EnvelopeIcon, LockClosedIcon, KeyIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 
 interface FormFieldProps {
   id: string;
@@ -8,7 +8,7 @@ interface FormFieldProps {
   placeholder: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  icon: 'user' | 'email' | 'password' | 'confirmPassword';
+  icon: 'user' | 'email' | 'password' | 'confirmPassword' | 'phone';
 }
 
 const getIcon = (icon: FormFieldProps['icon']) => {
@@ -17,6 +17,8 @@ const getIcon = (icon: FormFieldProps['icon']) => {
       return <UserIcon className="h-5 w-5 text-gray-400" />;
     case 'email':
       return <EnvelopeIcon className="h-5 w-5 text-gray-400" />;
+    case 'phone':
+      return <DevicePhoneMobileIcon className="h-5 w-5 text-gray-400" />;
     case 'password':
       return <LockClosedIcon className="h-5 w-5 text-gray-400" />;
     case 'confirmPassword':

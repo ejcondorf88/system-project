@@ -3,6 +3,7 @@ import Login from "@/components/Login";
 import { Profile } from "@/components/Profile";
 import { Register } from "@/components/Register";
 import { Routines } from "@/components/Routines";
+import { Store } from "@/components/Store";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Home from "./pages/Home";
 
@@ -16,6 +17,7 @@ function AppRouter() {
         <Route path="/chat" element= {<Chat/>}/>
         <Route path="/profile" element= {<Profile/>}/>
         <Route path="/routines" element= {<Routines/>}/>
+        <Route path="/store" element= {<Store/>}/>
       </Routes>
     </BrowserRouter>
   );

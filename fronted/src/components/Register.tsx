@@ -55,6 +55,17 @@ export const Register = () => {
             />
 
             <FormField
+              id="phone"
+              name="phone"
+              type="tel"
+              label="Número de celular"
+              placeholder="+1 (555) 123-4567"
+              value={formData.phone}
+              onChange={handleChange}
+              icon="phone"
+            />
+
+            <FormField
               id="password"
               name="password"
               type="password"
