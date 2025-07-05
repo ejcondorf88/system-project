@@ -1,21 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { FaMedal } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-interface UserData {
-  id: number;
-  username: string;
-  email: string;
-  phone?: string;
-  level: string;
-  points: number;
-  benefits: number;
-  achievements: string[];
-  creacion: string;
-  estado: boolean;
-}
+import { useProfile } from '@/hooks/useProfile';
 
 const levelColors: Record<string, string> = {
   Bronce: 'from-yellow-700 to-yellow-400',
@@ -25,36 +12,7 @@ const levelColors: Record<string, string> = {
 
 export const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        const response = await axios.get('http://localhost:8080/api/users/me', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        setUser(response.data);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setError('Error al cargar los datos del usuario');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [navigate]);
+  const { user, loading, error, refreshProfile } = useProfile();
 
   if (loading) {
     return (

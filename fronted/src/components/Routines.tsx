@@ -1,15 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
-const routines = [
-  { id: 1, name: 'Tren Superior - Fuerza', level: 'Gratis', duration: '45 min', focus: 'Pecho, Espalda, Hombros' },
-  { id: 2, name: 'Piernas y Glúteos', level: 'Gratis', duration: '60 min', focus: 'Cuádriceps, Isquiotibiales, Glúteos' },
-  { id: 3, name: 'Cardio Intensivo HIIT', level: 'Gratis', duration: '30 min', focus: 'Quema de grasa' },
-  { id: 4, name: 'Full Body - Resistencia', level: 'Plata', duration: '75 min', focus: 'Todo el cuerpo' },
-  { id: 5, name: 'Yoga y Flexibilidad', level: 'Plata', duration: '45 min', focus: 'Recuperación, Flexibilidad' },
-  { id: 6, name: 'Entrenamiento Olímpico Avanzado', level: 'Oro', duration: '90 min', focus: 'Potencia, Técnica' },
-];
+import { useRoutines } from '@/hooks/useRoutines';
 
 const levelColors: Record<string, string> = {
   Gratis: 'bg-green-500/20 text-green-300',
@@ -19,6 +11,7 @@ const levelColors: Record<string, string> = {
 
 export const Routines = () => {
   const navigate = useNavigate();
+  const { routines, loading, error, startRoutine } = useRoutines();
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
@@ -51,7 +44,10 @@ export const Routines = () => {
               <p className="text-sm text-gray-300 mt-1">{routine.focus}</p>
               <div className="flex justify-between items-center mt-3 text-xs text-orange-300">
                 <span>Duración: {routine.duration}</span>
-                <button className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-orange-600 transition">
+                <button 
+                  onClick={() => startRoutine(routine.id)}
+                  className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-orange-600 transition"
+                >
                   Empezar
                 </button>
               </div>
