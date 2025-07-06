@@ -38,8 +38,23 @@ export const apiAdapter = {
 
   // Métodos para chat
   sendChatMessage: async (messageData: { message: string; user_id: number; timestamp: string }) => {
-    const response = await api.post('/chat/send', messageData);
-    return response.data;
+    console.log('=== apiAdapter.sendChatMessage ===');
+    console.log('messageData:', messageData);
+    console.log('URL:', `${API_URL}/chat/send`);
+    
+    try {
+      const response = await api.post('/chat/send', messageData);
+      console.log('Response status:', response.status);
+      console.log('Response data:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error en sendChatMessage:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+      }
+      throw error;
+    }
   },
 };
 

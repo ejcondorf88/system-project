@@ -30,13 +30,20 @@ const chatAdapter = {
   
   async sendMessage(content: string, userId: number): Promise<ChatMessage> {
     try {
+      console.log('=== chatAdapter.sendMessage ===');
+      console.log('content:', content);
+      console.log('userId:', userId);
+      
       const messageData = {
         message: content,
         user_id: userId,
         timestamp: new Date().toISOString(),
       };
+      
+      console.log('messageData a enviar:', messageData);
 
       const response = await apiAdapter.sendChatMessage(messageData);
+      console.log('Respuesta del backend:', response);
       
       // Crear el mensaje del usuario
       const userMessage: ChatMessage = {
@@ -54,6 +61,7 @@ const chatAdapter = {
         timestamp: Date.now() + 1000,
       };
 
+      console.log('aiMessage creado:', aiMessage);
       return aiMessage;
     } catch (error) {
       console.error('Error al enviar mensaje:', error);

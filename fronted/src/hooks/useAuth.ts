@@ -21,8 +21,20 @@ export const useAuth = (): UseAuthReturn => {
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
       
       if (token) {
+        // Primero establecer el usuario desde localStorage para evitar null temporal
+        if (userData) {
+          try {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+            setIsAuthenticated(true);
+          } catch (error) {
+            console.error('Error al parsear datos del usuario:', error);
+          }
+        }
+        
         try {
           // Intentar obtener datos actualizados del usuario
           const currentUser = await authAdapter.getCurrentUser();

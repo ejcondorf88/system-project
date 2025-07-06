@@ -16,20 +16,47 @@ export const useChat = () => {
 
   const sendMessage = async (customMessage?: string) => {
     const messageToSend = customMessage || input;
+    console.log('=== INICIO DE sendMessage ===');
+    console.log('messageToSend:', messageToSend);
+    console.log('user:', user);
+    console.log('user.id:', user?.id);
+    
     if (!messageToSend.trim()) {
       console.log('No hay mensaje para enviar');
       return;
     }
     
+    // Si no hay usuario, intentar obtenerlo del localStorage como fallback
+    let currentUser = user;
     if (!user) {
+      console.log('Usuario es null, intentando obtener del localStorage...');
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          currentUser = JSON.parse(userData);
+          console.log('Usuario obtenido del localStorage:', currentUser);
+        } catch (error) {
+          console.error('Error al parsear usuario del localStorage:', error);
+        }
+      }
+    }
+    
+    if (!currentUser) {
       console.log('No hay usuario autenticado');
       // Opcional: mostrar mensaje de error al usuario
       return;
     }
     
+    if (!currentUser.id) {
+      console.log('Usuario no tiene ID válido');
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      console.log('Enviando mensaje:', messageToSend, 'user:', user);
+      console.log('Enviando mensaje:', messageToSend, 'user:', currentUser);
+      console.log('user.id (number):', parseInt(currentUser.id));
+      
       // Agregar el mensaje del usuario inmediatamente
       const userMessage: ChatMessage = {
         id: Math.random().toString(36).slice(2),
@@ -42,8 +69,12 @@ export const useChat = () => {
       if (!customMessage) {
         setInput('');
       }
+      
+      console.log('Llamando a chatAdapter.sendMessage...');
       // Enviar mensaje a la API y obtener respuesta
-      const aiResponse = await chatAdapter.sendMessage(currentInput, parseInt(user.id));
+      const aiResponse = await chatAdapter.sendMessage(currentInput, parseInt(currentUser.id));
+      console.log('Respuesta recibida:', aiResponse);
+      
       // Agregar la respuesta de la IA
       setMessages((prev) => [...prev, aiResponse]);
     } catch (error) {
