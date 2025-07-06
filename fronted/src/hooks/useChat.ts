@@ -14,24 +14,27 @@ export const useChat = () => {
     chatAdapter.getMessages().then(setMessages);
   }, []);
 
-  const sendMessage = async () => {
-    if (!input.trim() || !user) {
-      console.log('No hay input o usuario', { input, user });
+  const sendMessage = async (customMessage?: string) => {
+    const messageToSend = customMessage || input;
+    if (!messageToSend.trim() || !user) {
+      console.log('No hay input o usuario', { messageToSend, user });
       return;
     }
     setIsLoading(true);
     try {
-      console.log('Enviando mensaje:', input, 'user:', user);
+      console.log('Enviando mensaje:', messageToSend, 'user:', user);
       // Agregar el mensaje del usuario inmediatamente
       const userMessage: ChatMessage = {
         id: Math.random().toString(36).slice(2),
         sender: 'user',
-        content: input,
+        content: messageToSend,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, userMessage]);
-      const currentInput = input;
-      setInput('');
+      const currentInput = messageToSend;
+      if (!customMessage) {
+        setInput('');
+      }
       // Enviar mensaje a la API y obtener respuesta
       const aiResponse = await chatAdapter.sendMessage(currentInput, parseInt(user.id));
       // Agregar la respuesta de la IA

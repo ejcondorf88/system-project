@@ -26,11 +26,21 @@ export interface AuthResponse {
 const authAdapter = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, credentials);
+      // Crear FormData para enviar los datos en el formato que espera OAuth2PasswordRequestForm
+      const formData = new FormData();
+      formData.append('username', credentials.username);
+      formData.append('password', credentials.password);
+      
+      const response = await axios.post(`${API_URL}/auth/login`, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Error al iniciar sesión');
+        const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Error al iniciar sesión';
+        throw new Error(errorMessage);
       }
       throw error;
     }

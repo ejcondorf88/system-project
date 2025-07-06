@@ -12,14 +12,14 @@ from sqlalchemy.orm import Session
 router = APIRouter(tags=["auth"])
 
 @router.post("/login", response_model=UserResponse)
-def login(username: str, password: str, db: Session = Depends(get_db)):
+def login(credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     print(f"\n{'='*50}")
     print("=== INICIO DEL ENDPOINT DE LOGIN ===")
     print(f"1. Datos recibidos:")
-    print(f"   - Usuario: {username}")
-    print(f"   - Contraseña: {'*' * len(password)}")
+    print(f"   - Usuario: {credentials.username}")
+    print(f"   - Contraseña: {'*' * len(credentials.password)}")
     
-    user = auth.auth_user(db, username, password)
+    user = auth.auth_user(db, credentials.username, credentials.password)
     if not user:
         print("❌ Autenticación fallida")
         raise HTTPException(

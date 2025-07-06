@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useChat } from '../hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,10 +9,27 @@ export const Chat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const location = useLocation();
+  
+  // Obtener información de la rutina seleccionada
+  const selectedRoutine = location.state?.selectedRoutine;
+  const routineStarted = location.state?.routineStarted;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Enviar mensaje automático cuando se inicia una rutina
+  useEffect(() => {
+    if (routineStarted && selectedRoutine && messages.length === 0) {
+      const routineMessage = `¡Hola! Has iniciado la rutina "${selectedRoutine.name}". Esta rutina se enfoca en: ${selectedRoutine.focus} y tiene una duración de ${selectedRoutine.duration}. ¿Te gustaría que te guíe durante el entrenamiento?`;
+      
+      // Enviar mensaje automático después de un breve delay
+      setTimeout(() => {
+        sendMessage(routineMessage);
+      }, 1000);
+    }
+  }, [routineStarted, selectedRoutine, messages.length]);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-between bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
@@ -29,9 +46,15 @@ export const Chat = () => {
       <header className="w-full max-w-md flex items-center gap-3 px-4 py-3 bg-white/10 backdrop-blur-lg border-b border-white/20 fixed top-0 left-1/2 -translate-x-1/2 z-20 rounded-b-2xl">
         <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-full flex items-center justify-center text-white text-lg font-bold border-4 border-white/30 shadow-lg">ia</div>
         <div className="flex-1">
-          <div className="px-3 py-1 rounded-xl bg-gradient-to-r from-orange-500/30 to-yellow-500/30 border border-orange-500/30 text-white text-base font-semibold text-center shadow-sm">
-            Bienvenido al sistemas
-          </div>
+          {routineStarted && selectedRoutine ? (
+            <div className="px-3 py-1 rounded-xl bg-gradient-to-r from-green-500/30 to-blue-500/30 border border-green-500/30 text-white text-sm font-semibold text-center shadow-sm">
+              🏋️ {selectedRoutine.name}
+            </div>
+          ) : (
+            <div className="px-3 py-1 rounded-xl bg-gradient-to-r from-orange-500/30 to-yellow-500/30 border border-orange-500/30 text-white text-base font-semibold text-center shadow-sm">
+              Bienvenido al sistemas
+            </div>
+          )}
         </div>
         <button 
           onClick={logout}
@@ -44,6 +67,18 @@ export const Chat = () => {
 
       {/* Área de mensajes, con espacio para header y footer */}
       <main className="flex-1 w-full max-w-md mx-auto pt-20 pb-28 px-2 flex flex-col overflow-y-auto">
+        {routineStarted && selectedRoutine && (
+          <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+            <div className="flex items-center gap-2 text-green-300 text-sm">
+              <span>🏋️</span>
+              <span className="font-semibold">Rutina Activa:</span>
+              <span>{selectedRoutine.name}</span>
+            </div>
+            <div className="text-xs text-green-400 mt-1">
+              Duración: {selectedRoutine.duration} | Enfoque: {selectedRoutine.focus}
+            </div>
+          </div>
+        )}
         <div className="flex-1 space-y-2">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>

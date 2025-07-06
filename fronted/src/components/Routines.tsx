@@ -14,7 +14,7 @@ const levelColors: Record<string, string> = {
 export const Routines = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { routines, loading, error, startRoutine } = useRoutines();
+  const { routines, loading, error, startRoutine, canAccessRoutine } = useRoutines();
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
@@ -39,32 +39,51 @@ export const Routines = () => {
           </button>
         </div>
         <div className="space-y-4">
-          {routines.map((routine, index) => (
-            <motion.div
-              key={routine.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-lg"
-            >
-              <div className="flex justify-between items-start">
-                <h2 className="text-lg font-semibold text-white">{routine.name}</h2>
-                <span className={`text-xs font-bold px-2 py-1 rounded-full ${levelColors[routine.level]}`}>
-                  {routine.level}
-                </span>
-              </div>
-              <p className="text-sm text-gray-300 mt-1">{routine.focus}</p>
-              <div className="flex justify-between items-center mt-3 text-xs text-orange-300">
-                <span>Duración: {routine.duration}</span>
-                <button 
-                  onClick={() => startRoutine(routine.id)}
-                  className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:bg-orange-600 transition"
-                >
-                  Empezar
-                </button>
-              </div>
-            </motion.div>
-          ))}
+          {routines.map((routine, index) => {
+            const canAccess = canAccessRoutine(routine.level);
+            return (
+              <motion.div
+                key={routine.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-lg ${
+                  !canAccess ? 'opacity-60' : ''
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <h2 className="text-lg font-semibold text-white">{routine.name}</h2>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${levelColors[routine.level]}`}>
+                    {routine.level}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-300 mt-1">{routine.focus}</p>
+                
+                {!canAccess && (
+                  <div className="mt-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                    <p className="text-xs text-yellow-300">
+                      🔒 Necesitas nivel {routine.level} o superior para acceder
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center mt-3 text-xs text-orange-300">
+                  <span>Duración: {routine.duration}</span>
+                  <button 
+                    onClick={() => startRoutine(routine.id)}
+                    disabled={!canAccess}
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
+                      canAccess 
+                        ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                        : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    {canAccess ? 'Empezar' : 'Bloqueado'}
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </main>
 

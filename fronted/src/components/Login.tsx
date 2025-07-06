@@ -1,15 +1,16 @@
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function EnhancedGymLogin() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showPassword, setShowPassword] = useState(false);
+  const { login, loading } = useAuth();
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -24,15 +25,34 @@ export default function EnhancedGymLogin() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    // Validaciones básicas
+    const newErrors: {[key: string]: string} = {};
+    if (!formData.username.trim()) {
+      newErrors.username = "El usuario es requerido";
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = "La contraseña es requerida";
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      alert("¡Bienvenido de vuelta! Disfruta tu entrenamiento");
-    }, 2000);
+    try {
+      await login({
+        username: formData.username,
+        password: formData.password
+      });
+    } catch (error) {
+      console.error('Error en login:', error);
+      setErrors({
+        general: error instanceof Error ? error.message : 'Error al iniciar sesión'
+      });
+    }
   };
   const BackgroundAnimation = () => (
     <div className="absolute inset-0 overflow-hidden">
@@ -158,6 +178,24 @@ export default function EnhancedGymLogin() {
               </div>
             </div>
 
+            {/* Error message */}
+            {errors.general && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">
+                <div className="flex items-center space-x-2">
+                  <span>⚠️</span>
+                  <span>{errors.general}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Field errors */}
+            {errors.username && (
+              <div className="text-red-400 text-sm pl-1">{errors.username}</div>
+            )}
+            {errors.password && (
+              <div className="text-red-400 text-sm pl-1">{errors.password}</div>
+            )}
+
             {/* Remember me and forgot password */}
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center text-gray-300">
@@ -178,15 +216,15 @@ export default function EnhancedGymLogin() {
             {/* Submit button */}
             <button
               onClick={handleSubmit}
-              disabled={isLoading}
+              disabled={loading}
               className={`w-full py-4 px-6 rounded-2xl font-bold text-white transition-all duration-300 transform ${
-                isLoading
+                loading
                   ? "bg-gray-600 cursor-not-allowed"
                   : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 hover:scale-105 hover:shadow-2xl active:scale-95 shadow-lg"
               } relative overflow-hidden`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity"></div>
-              {isLoading ? (
+              {loading ? (
                 <div className="flex items-center justify-center space-x-3 relative z-10">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Accediendo...</span>
