@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Backend service para producción
+  backend:
+    restart: always
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-clave_secreta_fuerte_cambiala_en_produccion}
+      - ALLOWED_ORIGINS=["https://tu-dominio.com","https://www.tu-dominio.com"]
+    volumes:
+      - ./backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 40s
+
+  # Frontend service para producción
+  frontend:
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 40s
+
+networks:
+  fitness-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  logs:
+    driver: local 
