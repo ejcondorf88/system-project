@@ -4,6 +4,7 @@ import { Profile } from "@/components/Profile";
 import { Register } from "@/components/Register";
 import { Routines } from "@/components/Routines";
 import { Store } from "@/components/Store";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Home from "./pages/Home";
 
@@ -14,10 +15,26 @@ function AppRouter() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/chat" element= {<Chat/>}/>
-        <Route path="/profile" element= {<Profile/>}/>
-        <Route path="/routines" element= {<Routines/>}/>
-        <Route path="/store" element= {<Store/>}/>
+        <Route path="/chat" element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/routines" element={
+          <ProtectedRoute>
+            <Routines />
+          </ProtectedRoute>
+        } />
+        <Route path="/store" element={
+          <ProtectedRoute>
+            <Store />
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );

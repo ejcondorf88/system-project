@@ -16,10 +16,17 @@ export const useChat = () => {
 
   const sendMessage = async (customMessage?: string) => {
     const messageToSend = customMessage || input;
-    if (!messageToSend.trim() || !user) {
-      console.log('No hay input o usuario', { messageToSend, user });
+    if (!messageToSend.trim()) {
+      console.log('No hay mensaje para enviar');
       return;
     }
+    
+    if (!user) {
+      console.log('No hay usuario autenticado');
+      // Opcional: mostrar mensaje de error al usuario
+      return;
+    }
+    
     setIsLoading(true);
     try {
       console.log('Enviando mensaje:', messageToSend, 'user:', user);

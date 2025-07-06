@@ -19,13 +19,29 @@ export const useAuth = (): UseAuthReturn => {
 
   // Verificar si hay un token al cargar la aplicación
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-      // Aquí podrías hacer una llamada para obtener los datos del usuario
-      // Por ahora solo verificamos que existe el token
-    }
-    setLoading(false);
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        try {
+          // Intentar obtener datos actualizados del usuario
+          const currentUser = await authAdapter.getCurrentUser();
+          setUser(currentUser);
+          setIsAuthenticated(true);
+          localStorage.setItem('user', JSON.stringify(currentUser));
+        } catch (error) {
+          console.error('Error al obtener usuario actual:', error);
+          // Si hay error, limpiar datos y redirigir al login
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (credentials: { username: string; password: string }) => {
@@ -36,6 +52,7 @@ export const useAuth = (): UseAuthReturn => {
       if (response.access_token || response.token) {
         const token = response.access_token || response.token || '';
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(response.user));
         setIsAuthenticated(true);
         setUser(response.user);
         navigate('/chat');
@@ -56,6 +73,7 @@ export const useAuth = (): UseAuthReturn => {
       if (response.access_token || response.token) {
         const token = response.access_token || response.token || '';
         localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(response.user));
         setIsAuthenticated(true);
         setUser(response.user);
         navigate('/chat');
@@ -71,6 +89,7 @@ export const useAuth = (): UseAuthReturn => {
   const logout = () => {
     // Limpiar token y datos del usuario
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     sessionStorage.removeItem('token'); // Por si acaso
     setIsAuthenticated(false);
     setUser(null);

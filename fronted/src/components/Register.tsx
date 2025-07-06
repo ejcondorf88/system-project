@@ -8,7 +8,7 @@ import { useRegisterForm } from "../hooks/useRegisterForm";
 import { RocketLaunchIcon } from "@heroicons/react/24/outline";
 
 export const Register = () => {
-  const { formData, isLoading, handleChange, handleSubmit } = useRegisterForm();
+  const { formData, isLoading, errors, handleChange, handleSubmit } = useRegisterForm();
   console.log(`Los valores que se van a enviar son ${JSON.stringify(formData)}`)
 
   return (
@@ -86,6 +86,16 @@ export const Register = () => {
               onChange={handleChange}
               icon="confirmPassword"
             />
+
+            {/* Error message */}
+            {errors.submit && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 text-red-600 text-sm">
+                <div className="flex items-center space-x-2">
+                  <span>⚠️</span>
+                  <span>{errors.submit}</span>
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"

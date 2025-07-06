@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from './useAuth';
 import type { RegisterCredentials } from '@/adapters/auth.adapter';
-import authAdapter from '@/adapters/auth.adapter';
 
 interface FormData {
   username: string;
@@ -33,7 +32,7 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const { register } = useAuth();
 
   const validateForm = (): boolean => {
     const newErrors: Partial<RegisterCredentials> = {};
@@ -87,21 +86,14 @@ export const useRegisterForm = (): UseRegisterFormReturn => {
 
     setIsLoading(true);
     try {
-      const response = await authAdapter.register(formData as RegisterCredentials);
-      console.log('Registro exitoso:', response);
-      if (response.access_token) {
-        localStorage.setItem('token', response.access_token);
-        setTimeout(() => {
-          navigate('/chat');
-        }, 100);
-      } else if (response.token) {
-        localStorage.setItem('token', response.token);
-        setTimeout(() => {
-          navigate('/chat');
-        }, 100);
-      } else {
-        navigate('/chat');
-      }
+      await register({
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword
+      });
+      console.log('Registro exitoso');
     } catch (error) {
       console.error('Error en el registro:', error);
       if (error instanceof Error) {

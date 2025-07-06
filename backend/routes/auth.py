@@ -6,7 +6,7 @@ from schemas.user import Login, UserCreate, Token, User, UserResponse
 from repository import auth
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
-from core.security import create_access_token
+from core.security import create_access_token, get_current_user
 from fastapi import APIRouter, HTTPException, status, Depends, Response
 from sqlalchemy.orm import Session
 router = APIRouter(tags=["auth"])
@@ -104,3 +104,8 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error interno del servidor: {str(e)}"
         )
+
+@router.get("/me", response_model=User)
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Obtener información del usuario actual"""
+    return current_user
