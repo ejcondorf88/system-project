@@ -1,105 +1,90 @@
 import { useState, useEffect } from 'react';
-import { apiAdapter } from '../adapters/api';
+import { useNavigate } from 'react-router-dom';
+import authAdapter from '@/adapters/auth.adapter';
 
-interface User {
-  id: string;
-  username: string;
-  email: string;
-}
-
-interface AuthState {
-  user: User | null;
+interface UseAuthReturn {
   isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  user: any | null;
+  loading: boolean;
+  login: (credentials: { username: string; password: string }) => Promise<void>;
+  logout: () => void;
+  register: (credentials: { username: string; email: string; phone?: string; password: string; confirmPassword: string }) => Promise<void>;
 }
 
-export const useAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-    error: null,
-  });
+export const useAuth = (): UseAuthReturn => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
+  // Verificar si hay un token al cargar la aplicación
   useEffect(() => {
-    console.log('useAuth: ejecutando checkAuth');
-    checkAuth();
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+      // Aquí podrías hacer una llamada para obtener los datos del usuario
+      // Por ahora solo verificamos que existe el token
+    }
+    setLoading(false);
   }, []);
 
-  const checkAuth = async () => {
+  const login = async (credentials: { username: string; password: string }) => {
     try {
-      const token = localStorage.getItem('token');
-      console.log('checkAuth: token en localStorage:', token);
-      if (!token) {
-        setAuthState(prev => ({ ...prev, isLoading: false }));
-        return;
+      setLoading(true);
+      const response = await authAdapter.login(credentials);
+      
+      if (response.access_token || response.token) {
+        const token = response.access_token || response.token || '';
+        localStorage.setItem('token', token);
+        setIsAuthenticated(true);
+        setUser(response.user);
+        navigate('/chat');
       }
-
-      const user = await apiAdapter.getCurrentUser();
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-      console.log('checkAuth: usuario cargado', user);
     } catch (error) {
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: 'Error al verificar la autenticación',
-      });
-      localStorage.removeItem('token');
-      console.log('checkAuth: error, token eliminado');
+      console.error('Error en login:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const login = async (username: string, password: string) => {
+  const register = async (credentials: { username: string; email: string; phone?: string; password: string; confirmPassword: string }) => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-      const response = await apiAdapter.login({ username, password });
-      localStorage.setItem('token', response.token);
-      await checkAuth();
+      setLoading(true);
+      const response = await authAdapter.register(credentials);
+      
+      if (response.access_token || response.token) {
+        const token = response.access_token || response.token || '';
+        localStorage.setItem('token', token);
+        setIsAuthenticated(true);
+        setUser(response.user);
+        navigate('/chat');
+      }
     } catch (error) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: 'Error al iniciar sesión',
-      }));
-    }
-  };
-
-  const register = async (username: string, email: string, password: string) => {
-    try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-      const response = await apiAdapter.register({ username, email, password });
-      localStorage.setItem('token', response.token);
-      await checkAuth();
-    } catch (error) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: 'Error al registrar usuario',
-      }));
+      console.error('Error en registro:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
+    // Limpiar token y datos del usuario
     localStorage.removeItem('token');
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-    });
+    sessionStorage.removeItem('token'); // Por si acaso
+    setIsAuthenticated(false);
+    setUser(null);
+    
+    // Redirigir al login
+    navigate('/login');
   };
 
   return {
-    ...authState,
+    isAuthenticated,
+    user,
+    loading,
     login,
-    register,
     logout,
+    register
   };
 }; 

@@ -1,11 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaSignOutAlt } from 'react-icons/fa';
 import { useChat } from '../hooks/useChat';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Chat = () => {
   const { messages, input, setInput, sendMessage, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -30,6 +33,13 @@ export const Chat = () => {
             Bienvenido al sistemas
           </div>
         </div>
+        <button 
+          onClick={logout}
+          className="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-400 transition"
+        >
+          <FaSignOutAlt className="text-xs" />
+          Salir
+        </button>
       </header>
 
       {/* Área de mensajes, con espacio para header y footer */}

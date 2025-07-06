@@ -53,6 +53,7 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
     print("1. Datos recibidos:")
     print(f"   - Username: {user.username}")
     print(f"   - Email: {user.email}")
+    print(f"   - Phone: {user.phone if user.phone else 'No proporcionado'}")
     print(f"   - Contraseña: {'*' * len(user.password)}")
     
     if user.password != user.confirmPassword:

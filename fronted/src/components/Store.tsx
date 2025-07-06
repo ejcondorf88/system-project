@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaShoppingCart, FaCoins, FaGift, FaDumbbell, FaHeart, FaStar } from 'react-icons/fa';
+import { FaShoppingCart, FaCoins, FaGift, FaDumbbell, FaHeart, FaStar, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/hooks/useStore';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Store = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const {
     products,
     selectedCategory,
@@ -40,7 +42,16 @@ export const Store = () => {
           className="w-full max-w-md mb-6"
         >
           <div className="text-center mb-4">
-            <h1 className="text-3xl font-bold text-white mb-2">🏪 Tienda Fitness</h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-3xl font-bold text-white">🏪 Tienda Fitness</h1>
+              <button 
+                onClick={logout}
+                className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-400 transition"
+              >
+                <FaSignOutAlt className="text-xs" />
+                Salir
+              </button>
+            </div>
             <div className="flex items-center justify-center gap-2 text-orange-300">
               <FaCoins className="text-xl" />
               <span className="font-semibold">

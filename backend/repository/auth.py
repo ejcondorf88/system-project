@@ -58,7 +58,12 @@ def register_user(db: Session, user: UserCreate):
     db_user = User(
         username=user.username,
         email=user.email,
-        password=hashed_password
+        password=hashed_password,
+        phone=user.phone,  # Agregar campo phone
+        level="Bronce",  # Nivel inicial
+        points=0,  # Puntos iniciales
+        benefits=0,  # Beneficios iniciales
+        achievements="[]"  # Logros iniciales vacíos
     )
     
     print("3. Guardando usuario en la base de datos")
@@ -67,5 +72,9 @@ def register_user(db: Session, user: UserCreate):
     db.refresh(db_user)
     
     print("4. Registro exitoso")
+    print(f"   - Usuario creado con ID: {db_user.id}")
+    print(f"   - Phone guardado: {db_user.phone}")
+    print(f"   - Level: {db_user.level}")
+    print(f"   - Points: {db_user.points}")
     print("=== FIN DEL PROCESO DE REGISTRO ===")
     return db_user

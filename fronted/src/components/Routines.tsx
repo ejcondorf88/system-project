@@ -1,7 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { FaSignOutAlt } from 'react-icons/fa';
 import { useRoutines } from '@/hooks/useRoutines';
+import { useAuth } from '@/hooks/useAuth';
 
 const levelColors: Record<string, string> = {
   Gratis: 'bg-green-500/20 text-green-300',
@@ -11,6 +13,7 @@ const levelColors: Record<string, string> = {
 
 export const Routines = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const { routines, loading, error, startRoutine } = useRoutines();
 
   return (
@@ -25,7 +28,16 @@ export const Routines = () => {
       </div>
       
       <main className="flex-1 w-full max-w-md mx-auto pt-8 pb-24 px-4 flex flex-col">
-        <h1 className="text-3xl font-bold text-white text-center mb-6">Mis Rutinas</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-white">Mis Rutinas</h1>
+          <button 
+            onClick={logout}
+            className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-400 transition"
+          >
+            <FaSignOutAlt className="text-xs" />
+            Salir
+          </button>
+        </div>
         <div className="space-y-4">
           {routines.map((routine, index) => (
             <motion.div

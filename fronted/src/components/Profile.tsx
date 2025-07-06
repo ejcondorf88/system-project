@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaMedal } from 'react-icons/fa';
+import { FaMedal, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/useAuth';
 
 const levelColors: Record<string, string> = {
   Bronce: 'from-yellow-700 to-yellow-400',
@@ -13,6 +14,7 @@ const levelColors: Record<string, string> = {
 export const Profile = () => {
   const navigate = useNavigate();
   const { user, loading, error, refreshProfile } = useProfile();
+  const { logout } = useAuth();
 
   if (loading) {
     return (
@@ -104,10 +106,19 @@ export const Profile = () => {
             )}
           </div>
 
-          {/* Botón de compartir */}
-          <button className="mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-400 transition text-sm">
-            Compartir mi nivel
-          </button>
+          {/* Botones de acción */}
+          <div className="flex gap-2 mt-4">
+            <button className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-400 transition text-sm">
+              Compartir mi nivel
+            </button>
+            <button 
+              onClick={logout}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-400 transition text-sm"
+            >
+              <FaSignOutAlt className="text-sm" />
+              Cerrar sesión
+            </button>
+          </div>
         </motion.div>
       </main>
 
