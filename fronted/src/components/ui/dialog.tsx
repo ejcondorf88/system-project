@@ -2,7 +2,11 @@ import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+// Reemplazar el import de cn por una función local
+// import { cn } from "@/lib/utils";
+function cn(...classes: (string | undefined | null | false)[]) {
+  return classes.filter(Boolean).join(' ');
+}
 
 const Dialog = DialogPrimitive.Root
 

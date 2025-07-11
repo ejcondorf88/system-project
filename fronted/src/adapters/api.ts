@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api'; // URL actualizada del backend con prefijo /api
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://tu-backend-app.onrender.com/api'  // URL de producción en Render
+  : 'http://localhost:8080/api'; // URL de desarrollo local
 
 const api = axios.create({
   baseURL: API_URL,

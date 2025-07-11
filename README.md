@@ -244,6 +244,45 @@ Aquí tienes una vista simplificada de la estructura de carpetas del proyecto:
 - Manejo seguro de credenciales
 - HTTPS forzado
 
+## 🚀 Despliegue
+
+### Despliegue Automatizado
+
+Para desplegar tu aplicación en producción, puedes usar el script automatizado:
+
+```bash
+./deploy.sh
+```
+
+### Despliegue Manual
+
+#### Backend en Render
+1. Ve a [Render](https://render.com) y crea una cuenta
+2. Crea un nuevo Web Service
+3. Conecta tu repositorio de GitHub
+4. Configura:
+   - **Root Directory**: `backend`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `python main.py`
+5. Configura las variables de entorno (ver `DEPLOYMENT.md`)
+
+#### Frontend en Netlify
+1. Ve a [Netlify](https://netlify.com) y crea una cuenta
+2. Importa tu proyecto desde GitHub
+3. Configura:
+   - **Base directory**: `fronted`
+   - **Build command**: `npm run build`
+   - **Publish directory**: `dist`
+4. Configura las variables de entorno (ver `DEPLOYMENT.md`)
+
+### Alternativas de Despliegue
+
+- **Vercel**: Usa el archivo `fronted/vercel.json` para desplegar el frontend
+- **Railway**: Alternativa a Render para el backend
+- **Heroku**: Plataforma tradicional para aplicaciones web
+
+Para instrucciones detalladas, consulta `DEPLOYMENT.md`.
+
 ## 🤝 Contribución
 
 1. Fork el proyecto
