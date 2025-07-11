@@ -121,6 +121,14 @@ export const Profile = () => {
 
           {/* Botones de acción */}
           <div className="flex gap-2 mt-4">
+            {user.is_superuser && (
+              <button
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-400 transition text-sm"
+                onClick={() => navigate('/crm')}
+              >
+                Ir al CRM
+              </button>
+            )}
             <button className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-400 transition text-sm">
               Compartir mi nivel
             </button>

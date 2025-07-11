@@ -41,10 +41,18 @@ def login(credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depe
     
     print("4. Login exitoso")
     print(f"{'='*50}\n")
+    # --- Asegurar achievements como string ---
+    user_dict = user.__dict__.copy()
+    if hasattr(user, 'achievements_json'):
+        user_dict['achievements'] = user.achievements_json
+    else:
+        import json
+        user_dict['achievements'] = json.dumps([a.name for a in getattr(user, 'achievements', [])])
+    # -----------------------------------------
     return UserResponse(
         access_token=access_token,
         token_type="bearer",
-        user=user
+        user=user_dict
     )
 
 @router.post("/register", response_model=UserResponse)

@@ -13,6 +13,7 @@ export interface UserData {
   achievements: string[];
   creacion: string;
   estado: boolean;
+  is_superuser: boolean;
 }
 
 export interface UserUpdateData {
