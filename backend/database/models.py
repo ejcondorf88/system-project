@@ -54,7 +54,7 @@ class Point(Base):
     amount = Column(Integer)
     reason = Column(String(255))
     created_at = Column(DateTime, server_default=func.now())
-    user = relationship("User", back_populates="points")
+    user = relationship("User", back_populates="points_rel")
 
 class Achievement(Base):
     __tablename__ = "achievements"
@@ -91,5 +91,5 @@ class User(Base):
     role = relationship("Role", back_populates="users")
     memberships = relationship("UserMembership", back_populates="user")
     routines = relationship("UserRoutine", back_populates="user")
-    points = relationship("Point", back_populates="user")
+    points_rel = relationship("Point", back_populates="user")
     achievements = relationship("UserAchievement", back_populates="user") 
