@@ -9,6 +9,15 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from database.database import Base, engine
 from database.models import User
+import sqlalchemy
+from sqlalchemy import create_engine, MetaData, Table, Column, Boolean
+from config.settings import settings
+
+engine = create_engine(settings.DATABASE_URL)
+metadata = MetaData()
+metadata.reflect(bind=engine)
+
+users = Table('users', metadata, autoload_with=engine)
 
 def migrate_database():
     """Ejecuta la migración de la base de datos"""
@@ -83,6 +92,24 @@ def migrate_database():
     
     return True
 
+# Verificar si la columna is_superuser existe, si no, agregarla
+def add_is_superuser_column():
+    with engine.connect() as conn:
+        insp = sqlalchemy.inspect(conn)
+        columns = [col['name'] for col in insp.get_columns('users')]
+        if 'is_superuser' not in columns:
+            print('Agregando columna is_superuser a la tabla users...')
+            conn.execute(sqlalchemy.text('ALTER TABLE users ADD COLUMN is_superuser BOOLEAN DEFAULT FALSE'))
+        else:
+            print('La columna is_superuser ya existe.')
+
+# Normalizar los valores nulos o inexistentes a False
+def normalize_is_superuser():
+    with engine.connect() as conn:
+        print('Normalizando valores nulos de is_superuser a FALSE...')
+        conn.execute(sqlalchemy.text('UPDATE users SET is_superuser = FALSE WHERE is_superuser IS NULL'))
+        print('Normalización completada.')
+
 if __name__ == "__main__":
     print("🚀 Iniciando migración de la base de datos...")
     success = migrate_database()
@@ -92,3 +119,6 @@ if __name__ == "__main__":
     else:
         print("💥 Error en la migración")
         sys.exit(1) 
+    add_is_superuser_column()
+    normalize_is_superuser()
+    print('Migración y normalización completadas.') 

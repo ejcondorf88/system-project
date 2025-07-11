@@ -1,17 +1,17 @@
 from typing import List
 import json
 
-from fastapi import APIRouter,Depends
+from fastapi import APIRouter,Depends, status
 from database.database import get_db
 from sqlalchemy.orm import Session
 from database import models
 from passlib.context import CryptContext
 
 from core.security import get_current_user
-from repository import user
+from repository import user as user_repository
 from fastapi import HTTPException,status
 from database.models import User
-from schemas.user import UserCreate, UserUpdate
+from schemas.user import UserCreate, UserUpdate, Role, RoleCreate, Membership, MembershipCreate, Routine, RoutineCreate, Point, PointCreate, Achievement, AchievementCreate
 
 router = APIRouter(
     tags= ["Users"]
@@ -74,3 +74,28 @@ def update_me(user_data: UserUpdate, current_user: User = Depends(get_current_us
         "creacion": updated_user.creacion,
         "estado": updated_user.estado
     }
+
+# --- Roles ---
+@router.post("/roles", response_model=Role)
+def create_role(role: RoleCreate, db: Session = Depends(get_db)):
+    return user_repository.crear_rol(db, name=role.name)
+
+# --- Membresías ---
+@router.post("/memberships", response_model=Membership)
+def create_membership(membership: MembershipCreate, db: Session = Depends(get_db)):
+    return user_repository.crear_membresia(db, name=membership.name, description=membership.description, price=membership.price, duration_days=membership.duration_days)
+
+# --- Rutinas ---
+@router.post("/routines", response_model=Routine)
+def create_routine(routine: RoutineCreate, db: Session = Depends(get_db)):
+    return user_repository.crear_rutina(db, name=routine.name, focus=routine.focus, level=routine.level, description=routine.description)
+
+# --- Puntos ---
+@router.post("/points", response_model=Point)
+def create_point(point: PointCreate, db: Session = Depends(get_db)):
+    return user_repository.crear_punto(db, user_id=point.user_id, amount=point.amount, reason=point.reason)
+
+# --- Logros ---
+@router.post("/achievements", response_model=Achievement)
+def create_achievement(achievement: AchievementCreate, db: Session = Depends(get_db)):
+    return user_repository.crear_logro(db, name=achievement.name, description=achievement.description)

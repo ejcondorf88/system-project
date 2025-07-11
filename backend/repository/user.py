@@ -57,3 +57,38 @@ def actualizar_usuario(user_id: int, user_data, db: Session):
     db.commit()
     db.refresh(user)
     return user
+
+def crear_rol(db: Session, name: str):
+    role = models.Role(name=name)
+    db.add(role)
+    db.commit()
+    db.refresh(role)
+    return role
+
+def crear_membresia(db: Session, name: str, description: str = None, price: float = None, duration_days: int = None):
+    membership = models.Membership(name=name, description=description, price=price, duration_days=duration_days)
+    db.add(membership)
+    db.commit()
+    db.refresh(membership)
+    return membership
+
+def crear_rutina(db: Session, name: str, focus: str = None, level: str = None, description: str = None):
+    routine = models.Routine(name=name, focus=focus, level=level, description=description)
+    db.add(routine)
+    db.commit()
+    db.refresh(routine)
+    return routine
+
+def crear_punto(db: Session, user_id: int, amount: int, reason: str = None):
+    point = models.Point(user_id=user_id, amount=amount, reason=reason)
+    db.add(point)
+    db.commit()
+    db.refresh(point)
+    return point
+
+def crear_logro(db: Session, name: str, description: str = None):
+    achievement = models.Achievement(name=name, description=description)
+    db.add(achievement)
+    db.commit()
+    db.refresh(achievement)
+    return achievement
