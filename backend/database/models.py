@@ -91,5 +91,5 @@ class User(Base):
     role = relationship("Role", back_populates="users")
     memberships = relationship("UserMembership", back_populates="user")
     routines = relationship("UserRoutine", back_populates="user")
-    points_rel = relationship("Point", back_populates="user")
+    points = relationship("Point", back_populates="user")
     achievements = relationship("UserAchievement", back_populates="user") 

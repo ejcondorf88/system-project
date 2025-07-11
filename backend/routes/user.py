@@ -92,7 +92,9 @@ def create_routine(routine: RoutineCreate, db: Session = Depends(get_db)):
 
 # --- Puntos ---
 @router.post("/points", response_model=Point)
-def create_point(point: PointCreate, db: Session = Depends(get_db)):
+def create_point(point: PointCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Solo el superusuario puede asignar puntos.")
     return user_repository.crear_punto(db, user_id=point.user_id, amount=point.amount, reason=point.reason)
 
 # --- Logros ---
