@@ -45,14 +45,6 @@ const chatAdapter = {
       const response = await apiAdapter.sendChatMessage(messageData);
       console.log('Respuesta del backend:', response);
       
-      // Crear el mensaje del usuario
-      const userMessage: ChatMessage = {
-        id: Math.random().toString(36).slice(2),
-        sender: 'user',
-        content,
-        timestamp: Date.now(),
-      };
-
       // Crear la respuesta de la IA usando el campo 'message' de la respuesta
       const aiMessage: ChatMessage = {
         id: Math.random().toString(36).slice(2),

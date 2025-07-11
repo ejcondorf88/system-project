@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { FaMedal, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +12,7 @@ const levelColors: Record<string, string> = {
 
 export const Profile = () => {
   const navigate = useNavigate();
-  const { user, loading, error, refreshProfile } = useProfile();
+  const { user, loading, error } = useProfile();
   const { logout } = useAuth();
 
   if (loading) {

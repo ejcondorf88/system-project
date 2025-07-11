@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api';
-
 export interface Exercise {
   name: string;
   series: number;

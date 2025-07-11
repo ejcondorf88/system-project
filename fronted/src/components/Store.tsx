@@ -14,8 +14,7 @@ export const Store = () => {
     userPoints,
     loading,
     setSelectedCategory,
-    addToCart,
-    refreshUserPoints
+    addToCart
   } = useStore();
 
   return (
