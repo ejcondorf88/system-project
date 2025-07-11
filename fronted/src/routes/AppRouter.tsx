@@ -38,9 +38,9 @@ function AppRouter() {
           </ProtectedRoute>
         } />
         <Route path="/crm/*" element={
-          <SuperuserRoute>
-            <CRMRouter />
-          </SuperuserRoute>
+            <SuperuserRoute>
+              <CRMRouter />
+            </SuperuserRoute>
         } />
       </Routes>
     </BrowserRouter>

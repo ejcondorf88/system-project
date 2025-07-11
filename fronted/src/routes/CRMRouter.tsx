@@ -11,13 +11,13 @@ export default function CRMRouter() {
   // Por ahora, solo estructura de rutas
   return (
     <Routes>
-      <Route path="/crm" element={<CRMLayout />}>
+      <Route path="/" element={<CRMLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="users" element={<Users />} />
         <Route path="clients" element={<Clients />} />
         <Route path="reports" element={<Reports />} />
       </Route>
-      <Route path="*" element={<Navigate to="/crm" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 } 
