@@ -34,6 +34,8 @@ interface SuperuserRouteProps {
 export const SuperuserRoute = ({ children }: SuperuserRouteProps) => {
   const { isAuthenticated, user, loading } = useAuth();
 
+  console.log('SuperuserRoute:', { isAuthenticated, user, loading });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-gray-900 to-black">
