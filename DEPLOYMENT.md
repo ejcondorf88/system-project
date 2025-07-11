@@ -27,6 +27,7 @@ ALLOWED_ORIGINS=["https://tu-app-frontend.netlify.app", "http://localhost:3000",
 OPENAI_API_KEY=tu_clave_de_openai_aqui
 PINECONE_API_KEY=pcsk_6FECK2_AZPddmaoWkDJxqaWGyoN8HsfsJXe67WHWtMoBSJkhZiaCQ58KDMgZJXHA2sqBWv
 PINECONE_INDEX_NAME=chatbot
+PORT=8080
 ```
 
 ### 4. Despliegue

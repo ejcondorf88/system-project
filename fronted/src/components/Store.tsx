@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { FaShoppingCart, FaCoins, FaGift, FaDumbbell, FaHeart, FaStar, FaSignOutAlt } from 'react-icons/fa';
+import { FaShoppingCart, FaCoins, FaGift, FaStar, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/hooks/useStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,11 +13,8 @@ export const Store = () => {
     cart,
     userPoints,
     loading,
-    error,
     setSelectedCategory,
     addToCart,
-    removeFromCart,
-    clearCart,
     refreshUserPoints
   } = useStore();
 

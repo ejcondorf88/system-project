@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Routine } from '@/adapters/routines.adapter';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -26,7 +25,7 @@ const levelColors: Record<string, string> = {
 export const Routines = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { routines, loading, error, startRoutine, canAccessRoutine } = useRoutines();
+  const { routines, canAccessRoutine } = useRoutines();
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
 
   return (
