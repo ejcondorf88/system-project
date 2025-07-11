@@ -30,13 +30,6 @@ def create_user(usuario:UserCreate, db:Session = Depends(get_db)):
 
 @router.get("/me", status_code=status.HTTP_200_OK)
 def get_me(current_user: User = Depends(get_current_user)):
-    # Convertir achievements de string a lista
-    achievements = []
-    try:
-        achievements = json.loads(current_user.achievements) if current_user.achievements else []
-    except:
-        achievements = []
-    
     return {
         "id": current_user.id,
         "username": current_user.username,
@@ -45,7 +38,7 @@ def get_me(current_user: User = Depends(get_current_user)):
         "level": current_user.level,
         "points": current_user.points,
         "benefits": current_user.benefits,
-        "achievements": achievements,
+        "achievements": current_user.achievements_json,  # Siempre string
         "creacion": current_user.creacion,
         "estado": current_user.estado,
         "is_superuser": getattr(current_user, 'is_superuser', False)

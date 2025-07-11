@@ -85,10 +85,13 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
         )
 
         print("5. Preparando respuesta")
+        # Al preparar la respuesta, aseguramos que achievements sea un string
+        user_dict = db_user.__dict__.copy() if 'db_user' in locals() else user.__dict__.copy()
+        user_dict['achievements'] = user_dict.get('achievements_json', '[]')
         result = UserResponse(
             access_token=access_token,
             token_type="bearer",
-            user=db_user
+            user=user_dict
         )
 
         print("6. Registro completado exitosamente")

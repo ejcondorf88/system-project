@@ -53,8 +53,15 @@ def register_user(db: Session, user: UserCreate):
             detail="El nombre de usuario o correo ya está registrado"
         )
     
-    print("2. Creando nuevo usuario")
+    print(f"2. Creando nuevo usuario")
     hashed_password = get_password_hash(user.password)
+    print(f"   - hashed_password: {hashed_password}")
+    print(f"   - phone: {user.phone} ({type(user.phone)})")
+    print(f"   - level: Bronse (str)")
+    print(f"   - points: 0 (int)")
+    print(f"   - benefits: 0 (int)")
+    print(f"   - achievements: '[]' (str)")
+    print(f"   - is_superuser: {getattr(user, 'is_superuser', False)} ({type(getattr(user, 'is_superuser', False))})")
     db_user = User(
         username=user.username,
         email=user.email,
@@ -63,7 +70,7 @@ def register_user(db: Session, user: UserCreate):
         level="Bronce",  # Nivel inicial
         points=0,  # Puntos iniciales
         benefits=0,  # Beneficios iniciales
-        achievements="[]",  # Logros iniciales vacíos
+        achievements_json="[]",  # Logros iniciales vacíos
         is_superuser=bool(getattr(user, 'is_superuser', False))  # Siempre definido
     )
     
