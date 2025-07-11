@@ -31,6 +31,20 @@ export const Profile = () => {
     );
   }
 
+  // Parsear achievements a array si es string
+  let achievements: any[] = [];
+  if (user.achievements) {
+    if (Array.isArray(user.achievements)) {
+      achievements = user.achievements;
+    } else {
+      try {
+        achievements = JSON.parse(user.achievements);
+      } catch {
+        achievements = [];
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
       {/* Fondo animado */}
@@ -94,10 +108,10 @@ export const Profile = () => {
 
           {/* Logros */}
           <div className="flex flex-wrap gap-2 mb-4 justify-center">
-            {user.achievements.length > 0 ? (
-              user.achievements.map((achieve, index) => (
+            {achievements.length > 0 ? (
+              achievements.map((achieve, index) => (
                 <span key={index} className="bg-yellow-300 text-xs px-2 py-1 rounded-full text-black font-semibold shadow">
-                  {achieve}
+                  {typeof achieve === 'string' ? achieve : achieve.name || JSON.stringify(achieve)}
                 </span>
               ))
             ) : (

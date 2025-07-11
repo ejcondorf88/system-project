@@ -43,10 +43,12 @@ export default function EnhancedGymLogin() {
     }
 
     try {
+      console.log('Datos enviados al login:', formData);
       await login({
         username: formData.username,
         password: formData.password
       });
+      console.log('Login exitoso');
     } catch (error) {
       console.error('Error en login:', error);
       setErrors({
