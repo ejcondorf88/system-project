@@ -32,9 +32,10 @@ def create_user(usuario:UserCreate, db:Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     print(f"[DEBUG] achievements_json: {current_user.achievements_json} (type: {type(current_user.achievements_json)})")
     achievements = current_user.achievements_json
-    if not isinstance(achievements, str):
-        print("[DEBUG] achievements no es string, forzando a '[]'")
+    if not isinstance(achievements, str) or achievements == [] or achievements is None:
+        print(f"[DEBUG] achievements no es string o es lista vacía/None, forzando a '[]'")
         achievements = "[]"
+    print(f"[DEBUG] achievements final: {achievements} (type: {type(achievements)})")
     return {
         "id": current_user.id,
         "username": current_user.username,
