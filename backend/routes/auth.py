@@ -9,6 +9,7 @@ from datetime import timedelta
 from core.security import create_access_token, get_current_user
 from fastapi import APIRouter, HTTPException, status, Depends, Response
 from sqlalchemy.orm import Session
+import json
 router = APIRouter(tags=["auth"])
 
 @router.post("/login", response_model=UserResponse)
@@ -111,4 +112,11 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
 @router.get("/me", response_model=User)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Obtener información del usuario actual"""
-    return current_user
+    # Asegurarse de que achievements sea string
+    user_dict = current_user.__dict__.copy()
+    # Si viene como lista, convertir a string
+    if isinstance(user_dict.get('achievements'), list):
+        user_dict['achievements'] = json.dumps(user_dict['achievements'])
+    elif user_dict.get('achievements') is None:
+        user_dict['achievements'] = "[]"
+    return User(**user_dict)
