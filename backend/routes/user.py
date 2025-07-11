@@ -32,9 +32,9 @@ def create_user(usuario:UserCreate, db:Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     print(f"[DEBUG] achievements_json: {current_user.achievements_json} (type: {type(current_user.achievements_json)})")
     achievements = current_user.achievements_json
-    if not isinstance(achievements, str) or achievements == [] or achievements is None:
-        print(f"[DEBUG] achievements no es string o es lista vacía/None, forzando a '[]'")
-        achievements = "[]"
+    if not isinstance(achievements, str):
+        print(f"[DEBUG] achievements no es string, serializando con json.dumps")
+        achievements = json.dumps(achievements if achievements else [])
     print(f"[DEBUG] achievements final: {achievements} (type: {type(achievements)})")
     return {
         "id": current_user.id,
@@ -49,7 +49,6 @@ def get_me(current_user: User = Depends(get_current_user)):
         "estado": current_user.estado,
         "is_superuser": getattr(current_user, 'is_superuser', False)
     }
-
 @router.put("/me", status_code=status.HTTP_200_OK)
 def update_me(user_data: UserUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     updated_user = user.actualizar_usuario(current_user.id, user_data, db)
