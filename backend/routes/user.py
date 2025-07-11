@@ -47,7 +47,8 @@ def get_me(current_user: User = Depends(get_current_user)):
         "benefits": current_user.benefits,
         "achievements": achievements,
         "creacion": current_user.creacion,
-        "estado": current_user.estado
+        "estado": current_user.estado,
+        "is_superuser": getattr(current_user, 'is_superuser', False)
     }
 
 @router.put("/me", status_code=status.HTTP_200_OK)

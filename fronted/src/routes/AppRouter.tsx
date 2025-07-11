@@ -5,6 +5,8 @@ import { Register } from "@/components/Register";
 import { Routines } from "@/components/Routines";
 import { Store } from "@/components/Store";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SuperuserRoute } from "@/components/ProtectedRoute";
+import CRMRouter from "./CRMRouter";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Home from "./pages/Home";
 
@@ -34,6 +36,11 @@ function AppRouter() {
           <ProtectedRoute>
             <Store />
           </ProtectedRoute>
+        } />
+        <Route path="/crm/*" element={
+          <SuperuserRoute>
+            <CRMRouter />
+          </SuperuserRoute>
         } />
       </Routes>
     </BrowserRouter>

@@ -15,4 +15,5 @@ class User(Base):
     benefits = Column(Integer, default=0)  # Beneficios activos
     achievements = Column(String, default="[]")  # Logros como JSON string
     creacion = Column(DateTime(timezone=True), server_default=func.now())
-    estado = Column(Boolean, default=True) 
+    estado = Column(Boolean, default=True)
+    is_superuser = Column(Boolean, default=False)  # Nuevo campo para superusuario 

@@ -7,6 +7,7 @@ class UserBase(BaseModel):
     username: str
     email: EmailStr
     phone: Optional[str] = None
+    is_superuser: Optional[bool] = False
 
 # Esquema para crear usuario
 class UserCreate(UserBase):
@@ -22,6 +23,7 @@ class User(UserBase):
     achievements: str = "[]"  # JSON string de logros
     creacion: datetime
     estado: bool
+    is_superuser: Optional[bool] = False
 
     class Config:
         from_attributes = True

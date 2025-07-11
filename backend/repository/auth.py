@@ -63,7 +63,8 @@ def register_user(db: Session, user: UserCreate):
         level="Bronce",  # Nivel inicial
         points=0,  # Puntos iniciales
         benefits=0,  # Beneficios iniciales
-        achievements="[]"  # Logros iniciales vacíos
+        achievements="[]",  # Logros iniciales vacíos
+        is_superuser=getattr(user, 'is_superuser', False)  # Nuevo campo
     )
     
     print("3. Guardando usuario en la base de datos")
