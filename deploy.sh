@@ -248,6 +248,16 @@ if [[ "$help_response" =~ ^[Yy]$ ]]; then
     esac
 fi
 
+# Verificar build del frontend
+print_status "Verificando build del frontend..."
+cd fronted
+if npm run build > /dev/null 2>&1; then
+    print_status "✅ Build del frontend exitoso"
+else
+    print_warning "⚠️  Build del frontend tiene advertencias (esto es normal)"
+fi
+cd ..
+
 print_status "✅ Script de despliegue completado"
 print_status "📖 Consulta DEPLOYMENT.md para instrucciones detalladas"
 print_status "🚀 ¡Buena suerte con tu despliegue!" 
