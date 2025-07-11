@@ -30,6 +30,11 @@ def create_user(usuario:UserCreate, db:Session = Depends(get_db)):
 
 @router.get("/me", status_code=status.HTTP_200_OK)
 def get_me(current_user: User = Depends(get_current_user)):
+    print(f"[DEBUG] achievements_json: {current_user.achievements_json} (type: {type(current_user.achievements_json)})")
+    achievements = current_user.achievements_json
+    if not isinstance(achievements, str):
+        print("[DEBUG] achievements no es string, forzando a '[]'")
+        achievements = "[]"
     return {
         "id": current_user.id,
         "username": current_user.username,
@@ -38,7 +43,7 @@ def get_me(current_user: User = Depends(get_current_user)):
         "level": current_user.level,
         "points": current_user.points,
         "benefits": current_user.benefits,
-        "achievements": current_user.achievements_json,  # Siempre string
+        "achievements": achievements,
         "creacion": current_user.creacion,
         "estado": current_user.estado,
         "is_superuser": getattr(current_user, 'is_superuser', False)
