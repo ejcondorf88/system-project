@@ -1,59 +1,15 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-interface TrainerStats {
-  totalRoutines: number;
-  totalAssignments: number;
-  completedRoutines: number;
-  pendingRoutines: number;
-  usersWithRoutines: number;
-  completionRate: number;
-  totalUsersWithChat?: number;
-  totalChatMessages?: number;
-  routineRelatedMessages?: number;
-}
+import { useTrainer } from '@/hooks/useTrainer';
 
 export default function TrainerDashboard() {
-  const [stats, setStats] = useState<TrainerStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchTrainerStats();
-  }, []);
-
-  const fetchTrainerStats = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get('http://localhost:8080/api/trainer/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      setStats(response.data);
-    } catch (error) {
-      console.error('Error al cargar estadísticas:', error);
-      // Datos de ejemplo para demostración
-      setStats({
-        totalRoutines: 25,
-        totalAssignments: 180,
-        completedRoutines: 120,
-        pendingRoutines: 60,
-        usersWithRoutines: 45,
-        completionRate: 66.7,
-        totalUsersWithChat: 38,
-        totalChatMessages: 1250,
-        routineRelatedMessages: 420
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { stats, loading } = useTrainer();
 
   if (loading) {
     return (
-      <div className="bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8 max-w-6xl mx-auto mt-10">
-        <div className="text-white text-center">Cargando estadísticas...</div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Cargando estadísticas...</p>
+        </div>
       </div>
     );
   }
@@ -61,7 +17,7 @@ export default function TrainerDashboard() {
   if (!stats) {
     return (
       <div className="bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8 max-w-2xl mx-auto mt-10 text-center">
-        <h1 className="text-4xl font-bold text-green-400 mb-4">Bienvenido Entrenador</h1>
+        <h1 className="text-4xl font-bold text-orange-400 mb-4">Bienvenido Entrenador</h1>
         <p className="text-lg text-white mb-2">Gestiona las rutinas y el progreso de tus usuarios.</p>
         <p className="text-gray-300">Selecciona un módulo para comenzar.</p>
       </div>
@@ -72,7 +28,7 @@ export default function TrainerDashboard() {
     <div className="max-w-7xl mx-auto mt-10 space-y-6">
       {/* Header */}
       <div className="bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8">
-        <h1 className="text-4xl font-bold text-green-400 mb-2">Dashboard Entrenador</h1>
+        <h1 className="text-4xl font-bold text-orange-400 mb-2">Dashboard Entrenador</h1>
         <p className="text-white text-lg">Resumen de rutinas y progreso de usuarios</p>
       </div>
 
@@ -82,14 +38,14 @@ export default function TrainerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total Rutinas</p>
-              <p className="text-3xl font-bold text-white">{stats.totalRoutines}</p>
+              <p className="text-3xl font-bold text-white">{stats.total_routines || 0}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
-              <span className="text-blue-400 text-xl">🏋️</span>
+            <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
+              <span className="text-orange-400 text-xl">🏋️</span>
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-green-400 text-sm">
+            <span className="text-orange-400 text-sm">
               Rutinas creadas
             </span>
           </div>
@@ -99,15 +55,15 @@ export default function TrainerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Asignaciones</p>
-              <p className="text-3xl font-bold text-white">{stats.totalAssignments}</p>
+              <p className="text-3xl font-bold text-white">{stats.total_assignments || 0}</p>
             </div>
-            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-              <span className="text-green-400 text-xl">📋</span>
+            <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
+              <span className="text-orange-400 text-xl">📋</span>
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-green-400 text-sm">
-              {stats.usersWithRoutines} usuarios activos
+            <span className="text-orange-400 text-sm">
+              {stats.users_with_routines || 0} usuarios activos
             </span>
           </div>
         </div>
@@ -116,15 +72,15 @@ export default function TrainerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Completadas</p>
-              <p className="text-3xl font-bold text-white">{stats.completedRoutines}</p>
+              <p className="text-3xl font-bold text-white">{stats.completed_routines || 0}</p>
             </div>
-            <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
-              <span className="text-yellow-400 text-xl">✅</span>
+            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+              <span className="text-green-400 text-xl">✅</span>
             </div>
           </div>
           <div className="mt-4">
             <span className="text-green-400 text-sm">
-              {stats.completionRate}% tasa de éxito
+              {stats.completion_rate || 0}% tasa de éxito
             </span>
           </div>
         </div>
@@ -133,14 +89,14 @@ export default function TrainerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Pendientes</p>
-              <p className="text-3xl font-bold text-white">{stats.pendingRoutines}</p>
+              <p className="text-3xl font-bold text-white">{stats.pending_routines || 0}</p>
             </div>
-            <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
-              <span className="text-orange-400 text-xl">⏳</span>
+            <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
+              <span className="text-yellow-400 text-xl">⏳</span>
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-orange-400 text-sm">
+            <span className="text-yellow-400 text-sm">
               Por completar
             </span>
           </div>
@@ -150,14 +106,14 @@ export default function TrainerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Usuarios Activos</p>
-              <p className="text-3xl font-bold text-white">{stats.usersWithRoutines}</p>
+              <p className="text-3xl font-bold text-white">{stats.users_with_routines || 0}</p>
             </div>
-            <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-              <span className="text-purple-400 text-xl">👥</span>
+            <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+              <span className="text-blue-400 text-xl">👥</span>
             </div>
           </div>
           <div className="mt-4">
-            <span className="text-green-400 text-sm">
+            <span className="text-blue-400 text-sm">
               Con rutinas asignadas
             </span>
           </div>
@@ -167,7 +123,7 @@ export default function TrainerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Tasa de Éxito</p>
-              <p className="text-3xl font-bold text-white">{stats.completionRate}%</p>
+              <p className="text-3xl font-bold text-white">{stats.completion_rate || 0}%</p>
             </div>
             <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
               <span className="text-green-400 text-xl">📈</span>
@@ -180,38 +136,38 @@ export default function TrainerDashboard() {
           </div>
         </div>
 
-        {stats.totalUsersWithChat && (
+        {stats.total_users_with_chat && (
           <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm">Usuarios con Chat</p>
-                <p className="text-3xl font-bold text-white">{stats.totalUsersWithChat}</p>
+                <p className="text-3xl font-bold text-white">{stats.total_users_with_chat}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
-                <span className="text-blue-400 text-xl">💬</span>
+              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+                <span className="text-purple-400 text-xl">💬</span>
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-blue-400 text-sm">
-                {stats.totalChatMessages} mensajes totales
+              <span className="text-purple-400 text-sm">
+                {stats.total_chat_messages || 0} mensajes totales
               </span>
             </div>
           </div>
         )}
 
-        {stats.routineRelatedMessages && (
+        {stats.routine_related_messages && (
           <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400 text-sm">Mensajes de Rutinas</p>
-                <p className="text-3xl font-bold text-white">{stats.routineRelatedMessages}</p>
+                <p className="text-3xl font-bold text-white">{stats.routine_related_messages}</p>
               </div>
-              <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
-                <span className="text-purple-400 text-xl">🏋️</span>
+              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
+                <span className="text-orange-400 text-xl">🏋️</span>
               </div>
             </div>
             <div className="mt-4">
-              <span className="text-purple-400 text-sm">
+              <span className="text-orange-400 text-sm">
                 Consultas sobre ejercicios
               </span>
             </div>
@@ -230,10 +186,10 @@ export default function TrainerDashboard() {
                 <div className="w-32 bg-gray-600 rounded-full h-2">
                   <div 
                     className="bg-green-500 h-2 rounded-full" 
-                    style={{ width: `${(stats.completedRoutines / stats.totalAssignments) * 100}%` }}
+                    style={{ width: `${(stats.completed_routines || 0) / (stats.total_assignments || 1) * 100}%` }}
                   ></div>
                 </div>
-                <span className="text-white text-sm">{stats.completedRoutines}</span>
+                <span className="text-white text-sm">{stats.completed_routines || 0}</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -242,31 +198,51 @@ export default function TrainerDashboard() {
                 <div className="w-32 bg-gray-600 rounded-full h-2">
                   <div 
                     className="bg-orange-500 h-2 rounded-full" 
-                    style={{ width: `${(stats.pendingRoutines / stats.totalAssignments) * 100}%` }}
+                    style={{ width: `${(stats.pending_routines || 0) / (stats.total_assignments || 1) * 100}%` }}
                   ></div>
                 </div>
-                <span className="text-white text-sm">{stats.pendingRoutines}</span>
+                <span className="text-white text-sm">{stats.pending_routines || 0}</span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">Acciones Rápidas</h3>
+          <h3 className="text-xl font-bold text-white mb-4">Actividad Reciente</h3>
           <div className="space-y-3">
-            <button className="w-full p-3 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition">
-              ➕ Crear Nueva Rutina
-            </button>
-            <button className="w-full p-3 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition">
-              👥 Asignar Rutina
-            </button>
-            <button className="w-full p-3 bg-yellow-500/20 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition">
-              📊 Ver Progreso
-            </button>
-            <button className="w-full p-3 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition">
-              📈 Reportes
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
+              <span className="text-white text-sm">Nueva rutina creada</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <span className="text-white text-sm">Rutina completada por usuario</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+              <span className="text-white text-sm">Nuevo usuario asignado</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+              <span className="text-white text-sm">Consulta de chat sobre rutina</span>
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Acciones Rápidas */}
+      <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
+        <h3 className="text-xl font-bold text-white mb-4">Acciones Rápidas</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors">
+            Crear Nueva Rutina
+          </button>
+          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+            Asignar Rutinas
+          </button>
+          <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+            Ver Progreso
+          </button>
         </div>
       </div>
     </div>

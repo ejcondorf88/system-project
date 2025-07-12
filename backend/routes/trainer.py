@@ -15,7 +15,7 @@ router = APIRouter(
 
 def check_trainer_permissions(current_user: User):
     """Verificar que el usuario es entrenador o superusuario"""
-    if not current_user.is_superuser and (not current_user.role or current_user.role.name != "Entrenador"):
+    if not current_user.is_superuser and not current_user.is_trainer:
         raise HTTPException(
             status_code=403, 
             detail="Solo los entrenadores pueden acceder a esta funcionalidad"
@@ -29,8 +29,23 @@ def get_trainer_routines(
     """Obtener todas las rutinas (para entrenadores)"""
     check_trainer_permissions(current_user)
     
-    routines = db.query(models.Routine).all()
-    return routines
+    routines = db.query(models.Routine).filter(models.Routine.status == 1).all()
+    
+    # Convertir a formato de respuesta
+    routine_list = []
+    for routine in routines:
+        routine_list.append({
+            "id": routine.id,
+            "name": routine.name,
+            "focus": routine.focus,
+            "level": routine.level,
+            "description": routine.description,
+            "status": routine.status,
+            "created_at": routine.created_at.isoformat() if routine.created_at else None,
+            "updated_at": routine.updated_at.isoformat() if routine.updated_at else None
+        })
+    
+    return routine_list
 
 @router.post("/routines")
 def create_routine(
@@ -52,8 +67,14 @@ def create_routine(
     )
     
     return {
-        "message": "Rutina creada exitosamente",
-        "routine": new_routine
+        "id": new_routine.id,
+        "name": new_routine.name,
+        "focus": new_routine.focus,
+        "level": new_routine.level,
+        "description": new_routine.description,
+        "status": new_routine.status,
+        "created_at": new_routine.created_at.isoformat() if new_routine.created_at else None,
+        "updated_at": new_routine.updated_at.isoformat() if new_routine.updated_at else None
     }
 
 @router.put("/routines/{routine_id}")
@@ -79,8 +100,14 @@ def update_routine(
     db.refresh(routine)
     
     return {
-        "message": "Rutina actualizada exitosamente",
-        "routine": routine
+        "id": routine.id,
+        "name": routine.name,
+        "focus": routine.focus,
+        "level": routine.level,
+        "description": routine.description,
+        "status": routine.status,
+        "created_at": routine.created_at.isoformat() if routine.created_at else None,
+        "updated_at": routine.updated_at.isoformat() if routine.updated_at else None
     }
 
 @router.delete("/routines/{routine_id}")
@@ -96,15 +123,8 @@ def delete_routine(
     if not routine:
         raise HTTPException(status_code=404, detail="Rutina no encontrada")
     
-    # Verificar si hay usuarios con esta rutina asignada
-    user_routines = db.query(models.UserRoutine).filter(models.UserRoutine.routine_id == routine_id).count()
-    if user_routines > 0:
-        raise HTTPException(
-            status_code=400, 
-            detail="No se puede eliminar la rutina porque hay usuarios que la tienen asignada"
-        )
-    
-    db.delete(routine)
+    # Soft delete - cambiar status a 0
+    routine.status = 0
     db.commit()
     
     return {"message": "Rutina eliminada exitosamente"}
@@ -117,8 +137,26 @@ def get_trainer_users(
     """Obtener usuarios para asignar rutinas (solo entrenadores)"""
     check_trainer_permissions(current_user)
     
-    users = db.query(models.User).filter(models.User.estado == True).all()
-    return users
+    # Obtener usuarios que no son entrenadores
+    users = db.query(models.User).filter(
+        models.User.estado == True,
+        models.User.is_trainer == False
+    ).all()
+    
+    # Convertir a formato de respuesta
+    user_list = []
+    for user in users:
+        user_list.append({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "level": user.level,
+            "points": user.points,
+            "is_trainer": user.is_trainer,
+            "is_superuser": user.is_superuser
+        })
+    
+    return user_list
 
 @router.post("/assign-routine")
 def assign_routine_to_user(
@@ -151,8 +189,33 @@ def assign_routine_to_user(
     db.refresh(new_user_routine)
     
     return {
-        "message": f"Rutina '{routine.name}' asignada a {user.username}",
-        "user_routine": new_user_routine
+        "id": new_user_routine.id,
+        "user_id": new_user_routine.user_id,
+        "routine_id": new_user_routine.routine_id,
+        "assigned_at": new_user_routine.assigned_at.isoformat() if new_user_routine.assigned_at else None,
+        "completed_at": new_user_routine.completed_at.isoformat() if new_user_routine.completed_at else None,
+        "status": new_user_routine.status,
+        "created_at": new_user_routine.created_at.isoformat() if new_user_routine.created_at else None,
+        "updated_at": new_user_routine.updated_at.isoformat() if new_user_routine.updated_at else None,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "level": user.level,
+            "points": user.points,
+            "is_trainer": user.is_trainer,
+            "is_superuser": user.is_superuser
+        },
+        "routine": {
+            "id": routine.id,
+            "name": routine.name,
+            "focus": routine.focus,
+            "level": routine.level,
+            "description": routine.description,
+            "status": routine.status,
+            "created_at": routine.created_at.isoformat() if routine.created_at else None,
+            "updated_at": routine.updated_at.isoformat() if routine.updated_at else None
+        }
     }
 
 @router.get("/user-routines")
@@ -178,15 +241,27 @@ def get_trainer_user_routines(
                 "routine_id": ur.routine_id,
                 "assigned_at": ur.assigned_at.isoformat() if ur.assigned_at else None,
                 "completed_at": ur.completed_at.isoformat() if ur.completed_at else None,
+                "status": ur.status,
+                "created_at": ur.created_at.isoformat() if ur.created_at else None,
+                "updated_at": ur.updated_at.isoformat() if ur.updated_at else None,
                 "user": {
+                    "id": user.id,
                     "username": user.username,
                     "email": user.email,
-                    "level": user.level
+                    "level": user.level,
+                    "points": user.points,
+                    "is_trainer": user.is_trainer,
+                    "is_superuser": user.is_superuser
                 },
                 "routine": {
+                    "id": routine.id,
                     "name": routine.name,
                     "focus": routine.focus,
-                    "level": routine.level
+                    "level": routine.level,
+                    "description": routine.description,
+                    "status": routine.status,
+                    "created_at": routine.created_at.isoformat() if routine.created_at else None,
+                    "updated_at": routine.updated_at.isoformat() if routine.updated_at else None
                 }
             })
     
@@ -206,12 +281,42 @@ def mark_routine_completed(
         raise HTTPException(status_code=404, detail="Asignación de rutina no encontrada")
     
     user_routine.completed_at = datetime.now()
+    user_routine.status = 0  # Marcar como completada
     db.commit()
     db.refresh(user_routine)
     
+    # Obtener información del usuario y rutina
+    user = db.query(models.User).filter(models.User.id == user_routine.user_id).first()
+    routine = db.query(models.Routine).filter(models.Routine.id == user_routine.routine_id).first()
+    
     return {
-        "message": "Rutina marcada como completada",
-        "user_routine": user_routine
+        "id": user_routine.id,
+        "user_id": user_routine.user_id,
+        "routine_id": user_routine.routine_id,
+        "assigned_at": user_routine.assigned_at.isoformat() if user_routine.assigned_at else None,
+        "completed_at": user_routine.completed_at.isoformat() if user_routine.completed_at else None,
+        "status": user_routine.status,
+        "created_at": user_routine.created_at.isoformat() if user_routine.created_at else None,
+        "updated_at": user_routine.updated_at.isoformat() if user_routine.updated_at else None,
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "level": user.level,
+            "points": user.points,
+            "is_trainer": user.is_trainer,
+            "is_superuser": user.is_superuser
+        },
+        "routine": {
+            "id": routine.id,
+            "name": routine.name,
+            "focus": routine.focus,
+            "level": routine.level,
+            "description": routine.description,
+            "status": routine.status,
+            "created_at": routine.created_at.isoformat() if routine.created_at else None,
+            "updated_at": routine.updated_at.isoformat() if routine.updated_at else None
+        }
     }
 
 @router.delete("/user-routines/{user_routine_id}")
@@ -250,13 +355,26 @@ def get_trainer_stats(
     # Usuarios con rutinas asignadas
     users_with_routines = db.query(models.UserRoutine.user_id).distinct().count()
     
+    # Estadísticas adicionales de chat
+    total_users_with_chat = db.query(models.ChatMessage.user_id).distinct().count()
+    total_chat_messages = db.query(models.ChatMessage).count()
+    
+    # Mensajes relacionados con rutinas
+    routine_keywords = ['rutina', 'ejercicio', 'entrenamiento', 'fuerza', 'cardio', 'pesas', 'gimnasio']
+    routine_related_messages = db.query(models.ChatMessage).filter(
+        models.ChatMessage.content.ilike('%' + '%'.join(routine_keywords) + '%')
+    ).count()
+    
     return {
-        "totalRoutines": total_routines,
-        "totalAssignments": total_assignments,
-        "completedRoutines": completed_routines,
-        "pendingRoutines": pending_routines,
-        "usersWithRoutines": users_with_routines,
-        "completionRate": round((completed_routines / total_assignments * 100), 1) if total_assignments > 0 else 0
+        "total_routines": total_routines,
+        "total_assignments": total_assignments,
+        "completed_routines": completed_routines,
+        "pending_routines": pending_routines,
+        "users_with_routines": users_with_routines,
+        "completion_rate": round((completed_routines / total_assignments * 100), 1) if total_assignments > 0 else 0,
+        "total_users_with_chat": total_users_with_chat,
+        "total_chat_messages": total_chat_messages,
+        "routine_related_messages": routine_related_messages
     }
 
 # Nuevos endpoints para historial de chat de usuarios
@@ -294,16 +412,7 @@ def get_user_chat_history(
             session_id=msg.session_id
         ))
     
-    return {
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "level": user.level
-        },
-        "messages": chat_messages,
-        "total_messages": len(chat_messages)
-    }
+    return chat_messages
 
 @router.get("/users/{user_id}/chat-sessions")
 def get_user_chat_sessions(
