@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.database import Base, engine
-from routes import auth, user
+from routes import auth, user, dashboard, trainer, audit
 from api import chat
 from config.settings import settings
 
@@ -31,6 +31,9 @@ app.add_middleware(
 # Rutas
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(user.router, prefix="/api/users", tags=["users"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(trainer.router, prefix="/api/trainer", tags=["trainer"])
+app.include_router(audit.router, prefix="/api", tags=["audit"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 
 @app.get("/")

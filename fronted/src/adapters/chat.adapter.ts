@@ -14,18 +14,66 @@ export interface ChatResponse {
   timestamp: string;
 }
 
+export interface ChatMessageResponse {
+  id: number;
+  user_id: number;
+  message_type: string;
+  content: string;
+  timestamp: string;
+  session_id?: string;
+}
+
 const chatAdapter = {
   async getMessages(): Promise<ChatMessage[]> {
-    // Por ahora retornamos un mensaje de bienvenida
-    // En el futuro se puede implementar un endpoint para obtener historial
-    return [
-      {
-        id: '1',
-        sender: 'ia',
-        content: 'Bienvenido al sistema. ¿En qué puedo ayudarte?',
-        timestamp: Date.now() - 10000,
-      },
-    ];
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return [
+          {
+            id: '1',
+            sender: 'ia',
+            content: 'Bienvenido al sistema. ¿En qué puedo ayudarte?',
+            timestamp: Date.now() - 10000,
+          },
+        ];
+      }
+
+      const response = await apiAdapter.get('/chat/history');
+      console.log('Historial cargado:', response);
+
+      // Convertir mensajes de la base de datos al formato del frontend
+      const messages: ChatMessage[] = response.map((msg: ChatMessageResponse) => ({
+        id: msg.id.toString(),
+        sender: msg.message_type === 'ai' ? 'ia' : 'user',
+        content: msg.content,
+        timestamp: new Date(msg.timestamp).getTime(),
+      }));
+
+      // Si no hay mensajes, mostrar mensaje de bienvenida
+      if (messages.length === 0) {
+        return [
+          {
+            id: '1',
+            sender: 'ia',
+            content: 'Bienvenido al sistema. ¿En qué puedo ayudarte?',
+            timestamp: Date.now() - 10000,
+          },
+        ];
+      }
+
+      return messages;
+    } catch (error) {
+      console.error('Error al cargar historial:', error);
+      // Retornar mensaje de bienvenida en caso de error
+      return [
+        {
+          id: '1',
+          sender: 'ia',
+          content: 'Bienvenido al sistema. ¿En qué puedo ayudarte?',
+          timestamp: Date.now() - 10000,
+        },
+      ];
+    }
   },
   
   async sendMessage(content: string, userId: number): Promise<ChatMessage> {
@@ -58,6 +106,25 @@ const chatAdapter = {
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       throw new Error('Error al enviar mensaje');
+    }
+  },
+
+  async getChatSessions(): Promise<any[]> {
+    try {
+      const response = await apiAdapter.get('/chat/sessions');
+      return response;
+    } catch (error) {
+      console.error('Error al obtener sesiones:', error);
+      return [];
+    }
+  },
+
+  async clearHistory(): Promise<void> {
+    try {
+      await apiAdapter.delete('/chat/clear');
+    } catch (error) {
+      console.error('Error al limpiar historial:', error);
+      throw new Error('Error al limpiar historial');
     }
   },
 };

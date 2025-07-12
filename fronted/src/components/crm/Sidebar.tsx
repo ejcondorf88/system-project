@@ -3,6 +3,8 @@ import { NavLink } from 'react-router-dom';
 const modules = [
   { name: 'Dashboard', path: '/crm' },
   { name: 'Usuarios', path: '/crm/users' },
+  { name: 'Membresías', path: '/crm/memberships' },
+  { name: 'Rutinas', path: '/crm/routines' },
   { name: 'Clientes', path: '/crm/clients' },
   { name: 'Reportes', path: '/crm/reports' },
 ];

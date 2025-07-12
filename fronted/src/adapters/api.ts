@@ -58,6 +58,17 @@ export const apiAdapter = {
       throw error;
     }
   },
+
+  // Métodos para historial de chat
+  get: async (endpoint: string) => {
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  delete: async (endpoint: string) => {
+    const response = await api.delete(endpoint);
+    return response.data;
+  },
 };
 
 export default apiAdapter; 

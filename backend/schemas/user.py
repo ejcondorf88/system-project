@@ -5,12 +5,15 @@ from typing import Optional, List
 # --- Roles ---
 class RoleBase(BaseModel):
     name: str
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class RoleCreate(RoleBase):
     pass
 
 class Role(RoleBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -20,12 +23,15 @@ class MembershipBase(BaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     duration_days: Optional[int] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class MembershipCreate(MembershipBase):
     pass
 
 class Membership(MembershipBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -34,12 +40,15 @@ class UserMembershipBase(BaseModel):
     membership_id: int
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class UserMembershipCreate(UserMembershipBase):
     pass
 
 class UserMembership(UserMembershipBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -49,12 +58,15 @@ class RoutineBase(BaseModel):
     focus: Optional[str] = None
     level: Optional[str] = None
     description: Optional[str] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class RoutineCreate(RoutineBase):
     pass
 
 class Routine(RoutineBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -63,12 +75,15 @@ class UserRoutineBase(BaseModel):
     routine_id: int
     assigned_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class UserRoutineCreate(UserRoutineBase):
     pass
 
 class UserRoutine(UserRoutineBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -77,6 +92,7 @@ class PointBase(BaseModel):
     user_id: int
     amount: int
     reason: Optional[str] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class PointCreate(PointBase):
     pass
@@ -84,6 +100,7 @@ class PointCreate(PointBase):
 class Point(PointBase):
     id: int
     created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -91,12 +108,15 @@ class Point(PointBase):
 class AchievementBase(BaseModel):
     name: str
     description: Optional[str] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class AchievementCreate(AchievementBase):
     pass
 
 class Achievement(AchievementBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -104,12 +124,15 @@ class UserAchievementBase(BaseModel):
     user_id: int
     achievement_id: int
     obtained_at: Optional[datetime] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
 
 class UserAchievementCreate(UserAchievementBase):
     pass
 
 class UserAchievement(UserAchievementBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
     class Config:
         from_attributes = True
 
@@ -136,6 +159,9 @@ class User(UserBase):
     creacion: datetime
     estado: bool
     is_superuser: bool = False
+    status: int = 1  # 0 = inactivo, 1 = activo
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True

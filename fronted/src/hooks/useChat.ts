@@ -6,13 +6,35 @@ export const useChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const { user } = useAuth();
 
   console.log('Usuario actual:', user);
 
   useEffect(() => {
-    chatAdapter.getMessages().then(setMessages);
+    loadChatHistory();
   }, []);
+
+  const loadChatHistory = async () => {
+    try {
+      setIsLoadingHistory(true);
+      const historyMessages = await chatAdapter.getMessages();
+      setMessages(historyMessages);
+    } catch (error) {
+      console.error('Error al cargar historial:', error);
+      // En caso de error, mostrar mensaje de bienvenida
+      setMessages([
+        {
+          id: '1',
+          sender: 'ia',
+          content: 'Bienvenido al sistema. ¿En qué puedo ayudarte?',
+          timestamp: Date.now() - 10000,
+        },
+      ]);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const sendMessage = async (customMessage?: string) => {
     const messageToSend = customMessage || input;
@@ -85,11 +107,23 @@ export const useChat = () => {
     }
   };
 
+  const clearHistory = async () => {
+    try {
+      await chatAdapter.clearHistory();
+      // Recargar historial después de limpiar
+      await loadChatHistory();
+    } catch (error) {
+      console.error('Error al limpiar historial:', error);
+    }
+  };
+
   return {
     messages,
     input,
     setInput,
     sendMessage,
     isLoading,
+    isLoadingHistory,
+    clearHistory,
   };
 }; 

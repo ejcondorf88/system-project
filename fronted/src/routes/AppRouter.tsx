@@ -5,8 +5,9 @@ import { Register } from "@/components/Register";
 import { Routines } from "@/components/Routines";
 import { Store } from "@/components/Store";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { SuperuserRoute } from "@/components/ProtectedRoute";
+import { SuperuserRoute, TrainerRoute } from "@/components/ProtectedRoute";
 import CRMRouter from "./CRMRouter";
+import TrainerRouter from "./TrainerRouter";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import Home from "./pages/Home";
 
@@ -41,6 +42,11 @@ function AppRouter() {
             <SuperuserRoute>
               <CRMRouter />
             </SuperuserRoute>
+        } />
+        <Route path="/trainer/*" element={
+            <TrainerRoute>
+              <TrainerRouter />
+            </TrainerRoute>
         } />
       </Routes>
     </BrowserRouter>

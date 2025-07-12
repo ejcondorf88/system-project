@@ -5,7 +5,7 @@ import { useChat } from '../hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Chat = () => {
-  const { messages, input, setInput, sendMessage, isLoading } = useChat();
+  const { messages, input, setInput, sendMessage, isLoading, isLoadingHistory, clearHistory } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -56,13 +56,22 @@ export const Chat = () => {
             </div>
           )}
         </div>
-        <button 
-          onClick={logout}
-          className="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-400 transition"
-        >
-          <FaSignOutAlt className="text-xs" />
-          Salir
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={clearHistory}
+            className="flex items-center gap-1 px-2 py-1 bg-gray-500 text-white rounded-lg text-xs hover:bg-gray-400 transition"
+            title="Limpiar historial"
+          >
+            🗑️
+          </button>
+          <button 
+            onClick={logout}
+            className="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded-lg text-xs hover:bg-red-400 transition"
+          >
+            <FaSignOutAlt className="text-xs" />
+            Salir
+          </button>
+        </div>
       </header>
 
       {/* Área de mensajes, con espacio para header y footer */}
@@ -80,17 +89,28 @@ export const Chat = () => {
           </div>
         )}
         <div className="flex-1 space-y-2">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-md text-sm font-medium break-words ${msg.sender === 'user'
-                ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-br-none'
-                : 'bg-white/80 text-gray-900 rounded-bl-none border border-orange-200'}
-              `}>
-                {msg.content}
+          {isLoadingHistory ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-white text-sm">Cargando historial...</p>
               </div>
             </div>
-          ))}
-          <div ref={messagesEndRef} />
+          ) : (
+            <>
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-md text-sm font-medium break-words ${msg.sender === 'user'
+                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white rounded-br-none'
+                    : 'bg-white/80 text-gray-900 rounded-bl-none border border-orange-200'}
+                  `}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
         </div>
       </main>
 

@@ -1,17 +1,17 @@
 from typing import List
 import json
-
-from fastapi import APIRouter,Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from database.database import get_db
 from sqlalchemy.orm import Session
 from database import models
 from passlib.context import CryptContext
-
 from core.security import get_current_user
 from repository import user as user_repository
-from fastapi import HTTPException,status
+from fastapi import HTTPException, status
 from database.models import User
 from schemas.user import UserCreate, UserUpdate, Role, RoleCreate, Membership, MembershipCreate, Routine, RoutineCreate, Point, PointCreate, Achievement, AchievementCreate
+from services.audit_service import AuditService
+from middleware.audit_middleware import AuditMiddleware
 
 router = APIRouter(
     tags= ["Users"]
@@ -24,9 +24,28 @@ def get_users(db:Session = Depends(get_db),current_user: User = Depends(get_curr
     return data
 
 @router.post('/create',status_code=status.HTTP_202_ACCEPTED)
-def create_user(usuario:UserCreate, db:Session = Depends(get_db)):
-    user.crear_usuario(usuario,db)
-    return{"respuesta":"Usuario creado"}
+def create_user(
+    usuario: UserCreate, 
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    # Crear usuario
+    new_user = user.crear_usuario(usuario, db)
+    
+    # Registrar auditoría
+    ip_address = AuditMiddleware.get_client_ip(request)
+    user_agent = AuditMiddleware.get_user_agent(request)
+    
+    AuditService.log_create(
+        db=db,
+        table_name="users",
+        record_id=new_user.id,
+        user_id=new_user.id,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    
+    return {"respuesta": "Usuario creado"}
 
 @router.get("/me", status_code=status.HTTP_200_OK)
 def get_me(current_user: User = Depends(get_current_user)):
@@ -50,8 +69,47 @@ def get_me(current_user: User = Depends(get_current_user)):
         "is_superuser": getattr(current_user, 'is_superuser', False)
     }
 @router.put("/me", status_code=status.HTTP_200_OK)
-def update_me(user_data: UserUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_me(
+    user_data: UserUpdate, 
+    request: Request,
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    # Obtener usuario actual para comparar cambios
+    old_user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    
+    # Actualizar usuario
     updated_user = user.actualizar_usuario(current_user.id, user_data, db)
+    
+    # Registrar auditoría para cada campo modificado
+    ip_address = AuditMiddleware.get_client_ip(request)
+    user_agent = AuditMiddleware.get_user_agent(request)
+    
+    if old_user.phone != updated_user.phone:
+        AuditService.log_update(
+            db=db,
+            table_name="users",
+            record_id=updated_user.id,
+            field_name="phone",
+            old_value=old_user.phone,
+            new_value=updated_user.phone,
+            user_id=updated_user.id,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+    
+    if old_user.level != updated_user.level:
+        AuditService.log_update(
+            db=db,
+            table_name="users",
+            record_id=updated_user.id,
+            field_name="level",
+            old_value=old_user.level,
+            new_value=updated_user.level,
+            user_id=updated_user.id,
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
     
     # Convertir achievements de string a lista
     achievements = []

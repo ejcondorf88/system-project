@@ -1,5 +1,5 @@
 import os
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from dotenv import load_dotenv
@@ -10,6 +10,13 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
 import json
 from datetime import datetime
+from sqlalchemy.orm import Session
+from database.database import get_db
+from database import models
+from core.security import get_current_user
+from database.models import User
+from schemas.chat import ChatMessageSave, ChatMessageResponse
+import uuid
 
 # Cargar variables de entorno
 load_dotenv()
@@ -121,36 +128,68 @@ class ChatResponse(BaseModel):
     timestamp: str
     message_id: str
 
-# Simulación de historial de chat (en producción usar base de datos)
-chat_history = []
+def save_chat_message(db: Session, user_id: int, message_type: str, content: str, session_id: str = None) -> models.ChatMessage:
+    """Guarda un mensaje del chat en la base de datos"""
+    chat_message = models.ChatMessage(
+        user_id=user_id,
+        message_type=message_type,
+        content=content,
+        session_id=session_id or str(uuid.uuid4())
+    )
+    db.add(chat_message)
+    db.commit()
+    db.refresh(chat_message)
+    return chat_message
 
 @router.post("/send", response_model=ChatResponse)
-async def send_message(message: ChatMessage):
+async def send_message(
+    message: ChatMessage,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Envía un mensaje y recibe una respuesta de IA
+    Envía un mensaje y recibe una respuesta de IA, guardando ambos en la base de datos
     """
     try:
         print(f"=== MENSAJE RECIBIDO ===")
-        print(f"Usuario ID: {message.user_id}")
+        print(f"Usuario ID: {current_user.id}")
         print(f"Mensaje: {message.message}")
         print(f"Timestamp: {message.timestamp}")
         
+        # Generar session_id para agrupar la conversación
+        session_id = str(uuid.uuid4())
+        
+        # Guardar mensaje del usuario
+        user_message = save_chat_message(
+            db=db,
+            user_id=current_user.id,
+            message_type="user",
+            content=message.message,
+            session_id=session_id
+        )
+        
+        print(f"Mensaje del usuario guardado con ID: {user_message.id}")
+        
         # Generar respuesta usando las APIs de IA
         ai_response_text = get_ai_response_with_apis(message.message)
+        
+        # Guardar respuesta de la IA
+        ai_message = save_chat_message(
+            db=db,
+            user_id=current_user.id,
+            message_type="ai",
+            content=ai_response_text,
+            session_id=session_id
+        )
+        
+        print(f"Respuesta de IA guardada con ID: {ai_message.id}")
         
         # Crear respuesta
         response = ChatResponse(
             message=ai_response_text,
             timestamp=datetime.now().isoformat(),
-            message_id=f"msg_{len(chat_history) + 1}"
+            message_id=f"msg_{ai_message.id}"
         )
-        
-        # Guardar en historial
-        chat_history.append({
-            "user_message": message.message,
-            "bot_response": ai_response_text,
-            "timestamp": response.timestamp
-        })
         
         print(f"=== RESPUESTA GENERADA ===")
         print(f"Respuesta: {ai_response_text}")
@@ -162,18 +201,100 @@ async def send_message(message: ChatMessage):
         print(f"Error en chat: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error al procesar mensaje: {str(e)}")
 
-@router.get("/history", response_model=List[dict])
-async def get_chat_history():
+@router.get("/history", response_model=List[ChatMessageResponse])
+async def get_chat_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = 50
+):
     """
-    Obtiene el historial de chat
+    Obtiene el historial de chat del usuario desde la base de datos
     """
-    return chat_history
+    try:
+        messages = db.query(models.ChatMessage)\
+            .filter(models.ChatMessage.user_id == current_user.id)\
+            .order_by(models.ChatMessage.timestamp.desc())\
+            .limit(limit)\
+            .all()
+        
+        # Convertir a formato de respuesta
+        chat_messages = []
+        for msg in messages:
+            chat_messages.append(ChatMessageResponse(
+                id=msg.id,
+                user_id=msg.user_id,
+                message_type=msg.message_type,
+                content=msg.content,
+                timestamp=msg.timestamp,
+                session_id=msg.session_id
+            ))
+        
+        return chat_messages
+        
+    except Exception as e:
+        print(f"Error al obtener historial: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al obtener historial: {str(e)}")
+
+@router.get("/sessions", response_model=List[dict])
+async def get_chat_sessions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Obtiene las sesiones de chat del usuario
+    """
+    try:
+        # Obtener sesiones únicas del usuario
+        sessions = db.query(models.ChatMessage.session_id)\
+            .filter(models.ChatMessage.user_id == current_user.id)\
+            .distinct()\
+            .all()
+        
+        session_list = []
+        for session in sessions:
+            session_id = session[0]
+            if session_id:
+                # Obtener mensajes de esta sesión
+                session_messages = db.query(models.ChatMessage)\
+                    .filter(
+                        models.ChatMessage.user_id == current_user.id,
+                        models.ChatMessage.session_id == session_id
+                    )\
+                    .order_by(models.ChatMessage.timestamp.asc())\
+                    .all()
+                
+                if session_messages:
+                    session_list.append({
+                        "session_id": session_id,
+                        "message_count": len(session_messages),
+                        "first_message": session_messages[0].content[:50] + "..." if len(session_messages[0].content) > 50 else session_messages[0].content,
+                        "last_message_time": session_messages[-1].timestamp.isoformat(),
+                        "created_at": session_messages[0].timestamp.isoformat()
+                    })
+        
+        return session_list
+        
+    except Exception as e:
+        print(f"Error al obtener sesiones: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al obtener sesiones: {str(e)}")
 
 @router.delete("/clear")
-async def clear_chat_history():
+async def clear_chat_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Limpia el historial de chat
+    Limpia el historial de chat del usuario
     """
-    global chat_history
-    chat_history.clear()
-    return {"message": "Historial de chat limpiado"} 
+    try:
+        deleted_count = db.query(models.ChatMessage)\
+            .filter(models.ChatMessage.user_id == current_user.id)\
+            .delete()
+        
+        db.commit()
+        
+        return {"message": f"Se eliminaron {deleted_count} mensajes del historial"}
+        
+    except Exception as e:
+        print(f"Error al limpiar historial: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al limpiar historial: {str(e)}") 

@@ -1,0 +1,479 @@
+from fastapi import APIRouter, Depends, status, HTTPException
+from sqlalchemy.orm import Session
+from database.database import get_db
+from database import models
+from core.security import get_current_user
+from database.models import User
+from datetime import datetime
+from typing import List
+from schemas.user import RoutineCreate, UserRoutineCreate
+from schemas.chat import ChatMessageResponse
+
+router = APIRouter(
+    tags=["Trainer"]
+)
+
+def check_trainer_permissions(current_user: User):
+    """Verificar que el usuario es entrenador o superusuario"""
+    if not current_user.is_superuser and (not current_user.role or current_user.role.name != "Entrenador"):
+        raise HTTPException(
+            status_code=403, 
+            detail="Solo los entrenadores pueden acceder a esta funcionalidad"
+        )
+
+@router.get("/routines")
+def get_trainer_routines(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener todas las rutinas (para entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    routines = db.query(models.Routine).all()
+    return routines
+
+@router.post("/routines")
+def create_routine(
+    routine: RoutineCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Crear nueva rutina (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    from repository import user as user_repository
+    
+    new_routine = user_repository.crear_rutina(
+        db, 
+        name=routine.name, 
+        focus=routine.focus, 
+        level=routine.level, 
+        description=routine.description
+    )
+    
+    return {
+        "message": "Rutina creada exitosamente",
+        "routine": new_routine
+    }
+
+@router.put("/routines/{routine_id}")
+def update_routine(
+    routine_id: int,
+    routine_update: RoutineCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Actualizar rutina existente (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    routine = db.query(models.Routine).filter(models.Routine.id == routine_id).first()
+    if not routine:
+        raise HTTPException(status_code=404, detail="Rutina no encontrada")
+    
+    routine.name = routine_update.name
+    routine.focus = routine_update.focus
+    routine.level = routine_update.level
+    routine.description = routine_update.description
+    
+    db.commit()
+    db.refresh(routine)
+    
+    return {
+        "message": "Rutina actualizada exitosamente",
+        "routine": routine
+    }
+
+@router.delete("/routines/{routine_id}")
+def delete_routine(
+    routine_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Eliminar rutina (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    routine = db.query(models.Routine).filter(models.Routine.id == routine_id).first()
+    if not routine:
+        raise HTTPException(status_code=404, detail="Rutina no encontrada")
+    
+    # Verificar si hay usuarios con esta rutina asignada
+    user_routines = db.query(models.UserRoutine).filter(models.UserRoutine.routine_id == routine_id).count()
+    if user_routines > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se puede eliminar la rutina porque hay usuarios que la tienen asignada"
+        )
+    
+    db.delete(routine)
+    db.commit()
+    
+    return {"message": "Rutina eliminada exitosamente"}
+
+@router.get("/users")
+def get_trainer_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener usuarios para asignar rutinas (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    users = db.query(models.User).filter(models.User.estado == True).all()
+    return users
+
+@router.post("/assign-routine")
+def assign_routine_to_user(
+    user_routine: UserRoutineCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Asignar rutina a usuario (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    # Verificar que el usuario existe
+    user = db.query(models.User).filter(models.User.id == user_routine.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Verificar que la rutina existe
+    routine = db.query(models.Routine).filter(models.Routine.id == user_routine.routine_id).first()
+    if not routine:
+        raise HTTPException(status_code=404, detail="Rutina no encontrada")
+    
+    # Crear la asignación
+    new_user_routine = models.UserRoutine(
+        user_id=user_routine.user_id,
+        routine_id=user_routine.routine_id,
+        assigned_at=datetime.now()
+    )
+    
+    db.add(new_user_routine)
+    db.commit()
+    db.refresh(new_user_routine)
+    
+    return {
+        "message": f"Rutina '{routine.name}' asignada a {user.username}",
+        "user_routine": new_user_routine
+    }
+
+@router.get("/user-routines")
+def get_trainer_user_routines(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener rutinas asignadas por el entrenador"""
+    check_trainer_permissions(current_user)
+    
+    user_routines = db.query(models.UserRoutine).all()
+    
+    # Enriquecer con información de usuario y rutina
+    result = []
+    for ur in user_routines:
+        user = db.query(models.User).filter(models.User.id == ur.user_id).first()
+        routine = db.query(models.Routine).filter(models.Routine.id == ur.routine_id).first()
+        
+        if user and routine:
+            result.append({
+                "id": ur.id,
+                "user_id": ur.user_id,
+                "routine_id": ur.routine_id,
+                "assigned_at": ur.assigned_at.isoformat() if ur.assigned_at else None,
+                "completed_at": ur.completed_at.isoformat() if ur.completed_at else None,
+                "user": {
+                    "username": user.username,
+                    "email": user.email,
+                    "level": user.level
+                },
+                "routine": {
+                    "name": routine.name,
+                    "focus": routine.focus,
+                    "level": routine.level
+                }
+            })
+    
+    return result
+
+@router.put("/user-routines/{user_routine_id}/complete")
+def mark_routine_completed(
+    user_routine_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Marcar rutina como completada (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    user_routine = db.query(models.UserRoutine).filter(models.UserRoutine.id == user_routine_id).first()
+    if not user_routine:
+        raise HTTPException(status_code=404, detail="Asignación de rutina no encontrada")
+    
+    user_routine.completed_at = datetime.now()
+    db.commit()
+    db.refresh(user_routine)
+    
+    return {
+        "message": "Rutina marcada como completada",
+        "user_routine": user_routine
+    }
+
+@router.delete("/user-routines/{user_routine_id}")
+def remove_user_routine(
+    user_routine_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Remover rutina asignada a usuario (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    user_routine = db.query(models.UserRoutine).filter(models.UserRoutine.id == user_routine_id).first()
+    if not user_routine:
+        raise HTTPException(status_code=404, detail="Asignación de rutina no encontrada")
+    
+    db.delete(user_routine)
+    db.commit()
+    
+    return {"message": "Rutina removida del usuario exitosamente"}
+
+@router.get("/stats")
+def get_trainer_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener estadísticas del entrenador"""
+    check_trainer_permissions(current_user)
+    
+    total_routines = db.query(models.Routine).count()
+    total_assignments = db.query(models.UserRoutine).count()
+    completed_routines = db.query(models.UserRoutine).filter(
+        models.UserRoutine.completed_at.isnot(None)
+    ).count()
+    pending_routines = total_assignments - completed_routines
+    
+    # Usuarios con rutinas asignadas
+    users_with_routines = db.query(models.UserRoutine.user_id).distinct().count()
+    
+    return {
+        "totalRoutines": total_routines,
+        "totalAssignments": total_assignments,
+        "completedRoutines": completed_routines,
+        "pendingRoutines": pending_routines,
+        "usersWithRoutines": users_with_routines,
+        "completionRate": round((completed_routines / total_assignments * 100), 1) if total_assignments > 0 else 0
+    }
+
+# Nuevos endpoints para historial de chat de usuarios
+@router.get("/users/{user_id}/chat-history")
+def get_user_chat_history(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = 100
+):
+    """Obtener historial de chat de un usuario específico (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    # Verificar que el usuario existe
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Obtener mensajes del usuario
+    messages = db.query(models.ChatMessage)\
+        .filter(models.ChatMessage.user_id == user_id)\
+        .order_by(models.ChatMessage.timestamp.desc())\
+        .limit(limit)\
+        .all()
+    
+    # Convertir a formato de respuesta
+    chat_messages = []
+    for msg in messages:
+        chat_messages.append(ChatMessageResponse(
+            id=msg.id,
+            user_id=msg.user_id,
+            message_type=msg.message_type,
+            content=msg.content,
+            timestamp=msg.timestamp,
+            session_id=msg.session_id
+        ))
+    
+    return {
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "level": user.level
+        },
+        "messages": chat_messages,
+        "total_messages": len(chat_messages)
+    }
+
+@router.get("/users/{user_id}/chat-sessions")
+def get_user_chat_sessions(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener sesiones de chat de un usuario específico (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    # Verificar que el usuario existe
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Obtener sesiones únicas del usuario
+    sessions = db.query(models.ChatMessage.session_id)\
+        .filter(models.ChatMessage.user_id == user_id)\
+        .distinct()\
+        .all()
+    
+    session_list = []
+    for session in sessions:
+        session_id = session[0]
+        if session_id:
+            # Obtener mensajes de esta sesión
+            session_messages = db.query(models.ChatMessage)\
+                .filter(
+                    models.ChatMessage.user_id == user_id,
+                    models.ChatMessage.session_id == session_id
+                )\
+                .order_by(models.ChatMessage.timestamp.asc())\
+                .all()
+            
+            if session_messages:
+                # Filtrar mensajes relacionados con rutinas
+                routine_keywords = ['rutina', 'ejercicio', 'entrenamiento', 'fuerza', 'cardio', 'pesas', 'gimnasio']
+                has_routine_content = any(
+                    any(keyword in msg.content.lower() for keyword in routine_keywords)
+                    for msg in session_messages
+                )
+                
+                session_list.append({
+                    "session_id": session_id,
+                    "message_count": len(session_messages),
+                    "first_message": session_messages[0].content[:50] + "..." if len(session_messages[0].content) > 50 else session_messages[0].content,
+                    "last_message_time": session_messages[-1].timestamp.isoformat(),
+                    "created_at": session_messages[0].timestamp.isoformat(),
+                    "has_routine_content": has_routine_content
+                })
+    
+    return {
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "level": user.level
+        },
+        "sessions": session_list
+    }
+
+@router.get("/users/{user_id}/chat-sessions/{session_id}")
+def get_user_chat_session_detail(
+    user_id: int,
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener detalles de una sesión específica de chat (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    # Verificar que el usuario existe
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Obtener mensajes de la sesión específica
+    session_messages = db.query(models.ChatMessage)\
+        .filter(
+            models.ChatMessage.user_id == user_id,
+            models.ChatMessage.session_id == session_id
+        )\
+        .order_by(models.ChatMessage.timestamp.asc())\
+        .all()
+    
+    if not session_messages:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    
+    # Convertir a formato de respuesta
+    messages = []
+    for msg in session_messages:
+        messages.append(ChatMessageResponse(
+            id=msg.id,
+            user_id=msg.user_id,
+            message_type=msg.message_type,
+            content=msg.content,
+            timestamp=msg.timestamp,
+            session_id=msg.session_id
+        ))
+    
+    return {
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "level": user.level
+        },
+        "session_id": session_id,
+        "messages": messages,
+        "total_messages": len(messages),
+        "session_start": session_messages[0].timestamp.isoformat(),
+        "session_end": session_messages[-1].timestamp.isoformat()
+    }
+
+@router.get("/chat-analytics")
+def get_chat_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener análisis de chat de todos los usuarios (solo entrenadores)"""
+    check_trainer_permissions(current_user)
+    
+    # Obtener todos los usuarios con mensajes de chat
+    users_with_chat = db.query(models.ChatMessage.user_id).distinct().all()
+    
+    analytics = []
+    for user_id_tuple in users_with_chat:
+        user_id = user_id_tuple[0]
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        
+        if user:
+            # Contar mensajes del usuario
+            total_messages = db.query(models.ChatMessage)\
+                .filter(models.ChatMessage.user_id == user_id)\
+                .count()
+            
+            # Contar sesiones del usuario
+            total_sessions = db.query(models.ChatMessage.session_id)\
+                .filter(models.ChatMessage.user_id == user_id)\
+                .distinct()\
+                .count()
+            
+            # Buscar mensajes relacionados con rutinas
+            routine_keywords = ['rutina', 'ejercicio', 'entrenamiento', 'fuerza', 'cardio', 'pesas', 'gimnasio']
+            routine_messages = db.query(models.ChatMessage)\
+                .filter(models.ChatMessage.user_id == user_id)\
+                .all()
+            
+            routine_count = sum(
+                1 for msg in routine_messages
+                if any(keyword in msg.content.lower() for keyword in routine_keywords)
+            )
+            
+            analytics.append({
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "level": user.level
+                },
+                "total_messages": total_messages,
+                "total_sessions": total_sessions,
+                "routine_related_messages": routine_count,
+                "last_activity": db.query(models.ChatMessage.timestamp)\
+                    .filter(models.ChatMessage.user_id == user_id)\
+                    .order_by(models.ChatMessage.timestamp.desc())\
+                    .first()[0].isoformat() if total_messages > 0 else None
+            })
+    
+    return {
+        "total_users_with_chat": len(analytics),
+        "analytics": analytics
+    } 
