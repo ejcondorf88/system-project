@@ -226,7 +226,10 @@ async def get_chat_history(
                 message_type=msg.message_type,
                 content=msg.content,
                 timestamp=msg.timestamp,
-                session_id=msg.session_id
+                session_id=msg.session_id,
+                status=msg.status,
+                created_at=msg.created_at,
+                updated_at=msg.updated_at
             ))
         
         return chat_messages

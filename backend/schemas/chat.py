@@ -42,8 +42,8 @@ class ChatMessageResponse(BaseModel):
     timestamp: datetime
     session_id: Optional[str] = None
     status: int = 1
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
