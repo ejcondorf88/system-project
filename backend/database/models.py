@@ -140,6 +140,7 @@ class User(Base):
     creacion = Column(DateTime(timezone=True), server_default=func.now())
     estado = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False, nullable=False)
+    is_trainer = Column(Boolean, default=False, nullable=False)
     status = Column(Integer, default=1)  # 0 = inactivo, 1 = activo
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=True)
     created_at = Column(DateTime, server_default=func.now())

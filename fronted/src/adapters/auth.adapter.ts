@@ -20,6 +20,8 @@ export interface AuthResponse {
     id: string;
     username: string;
     email: string;
+    is_superuser?: boolean;
+    is_trainer?: boolean;
   };
 }
 

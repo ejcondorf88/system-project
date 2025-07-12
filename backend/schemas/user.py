@@ -142,6 +142,7 @@ class UserBase(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
     is_superuser: bool = False  # Indica si el usuario es superusuario (CRM)
+    is_trainer: bool = False  # Indica si el usuario es entrenador
 
 # Esquema para crear usuario
 class UserCreate(UserBase):
@@ -159,6 +160,7 @@ class User(UserBase):
     creacion: datetime
     estado: bool
     is_superuser: bool = False
+    is_trainer: bool = False
     status: int = 1  # 0 = inactivo, 1 = activo
     created_at: datetime
     updated_at: datetime

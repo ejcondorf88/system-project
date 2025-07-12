@@ -79,7 +79,7 @@ export const TrainerRoute = ({ children }: TrainerRouteProps) => {
   }
 
   // Verificar si es entrenador o superusuario
-  const isTrainer = user?.role?.name === "Entrenador" || user?.is_superuser;
+  const isTrainer = user?.is_trainer || user?.is_superuser;
   
   if (!isTrainer) {
     return (

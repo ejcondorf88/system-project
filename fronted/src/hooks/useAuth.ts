@@ -67,7 +67,15 @@ export const useAuth = (): UseAuthReturn => {
         localStorage.setItem('user', JSON.stringify(response.user));
         setIsAuthenticated(true);
         setUser(response.user);
-        navigate('/chat');
+        
+        // Redirigir según el tipo de usuario
+        if (response.user.is_superuser) {
+          navigate('/crm');
+        } else if (response.user.is_trainer) {
+          navigate('/trainer');
+        } else {
+          navigate('/chat');
+        }
       }
     } catch (error) {
       console.error('Error en login:', error);
@@ -88,7 +96,15 @@ export const useAuth = (): UseAuthReturn => {
         localStorage.setItem('user', JSON.stringify(response.user));
         setIsAuthenticated(true);
         setUser(response.user);
-        navigate('/chat');
+        
+        // Redirigir según el tipo de usuario
+        if (response.user.is_superuser) {
+          navigate('/crm');
+        } else if (response.user.is_trainer) {
+          navigate('/trainer');
+        } else {
+          navigate('/chat');
+        }
       }
     } catch (error) {
       console.error('Error en registro:', error);

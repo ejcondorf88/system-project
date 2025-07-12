@@ -82,6 +82,28 @@ def migrate_database():
             if not result.fetchone():
                 print("🔄 Agregando columna 'achievements'...")
                 connection.execute(text("ALTER TABLE users ADD COLUMN achievements VARCHAR DEFAULT '[]'"))
+                
+            # Verificar si la columna status existe
+            result = connection.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'users' AND column_name = 'status'
+            """))
+            
+            if not result.fetchone():
+                print("🔄 Agregando columna 'status'...")
+                connection.execute(text("ALTER TABLE users ADD COLUMN status INTEGER DEFAULT 1"))
+                
+            # Verificar si la columna is_trainer existe
+            result = connection.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'users' AND column_name = 'is_trainer'
+            """))
+            
+            if not result.fetchone():
+                print("🔄 Agregando columna 'is_trainer'...")
+                connection.execute(text("ALTER TABLE users ADD COLUMN is_trainer BOOLEAN DEFAULT FALSE"))
             
             connection.commit()
             print("✅ Migración completada exitosamente")
@@ -110,6 +132,13 @@ def normalize_is_superuser():
         conn.execute(sqlalchemy.text('UPDATE users SET is_superuser = FALSE WHERE is_superuser IS NULL'))
         print('Normalización completada.')
 
+# Normalizar los valores nulos o inexistentes de is_trainer a False
+def normalize_is_trainer():
+    with engine.connect() as conn:
+        print('Normalizando valores nulos de is_trainer a FALSE...')
+        conn.execute(sqlalchemy.text('UPDATE users SET is_trainer = FALSE WHERE is_trainer IS NULL'))
+        print('Normalización de is_trainer completada.')
+
 if __name__ == "__main__":
     print("🚀 Iniciando migración de la base de datos...")
     success = migrate_database()
@@ -121,4 +150,5 @@ if __name__ == "__main__":
         sys.exit(1) 
     add_is_superuser_column()
     normalize_is_superuser()
+    normalize_is_trainer()
     print('Migración y normalización completadas.') 
