@@ -104,6 +104,54 @@ def migrate_database():
             if not result.fetchone():
                 print("🔄 Agregando columna 'is_trainer'...")
                 connection.execute(text("ALTER TABLE users ADD COLUMN is_trainer BOOLEAN DEFAULT FALSE"))
+                
+            # Verificar si la tabla prizes existe
+            result = connection.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_name = 'prizes'
+            """))
+            
+            if not result.fetchone():
+                print("🔄 Creando tabla 'prizes'...")
+                connection.execute(text("""
+                    CREATE TABLE prizes (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL,
+                        description TEXT,
+                        image_url VARCHAR(500),
+                        points_cost INTEGER NOT NULL,
+                        stock INTEGER DEFAULT 0,
+                        category VARCHAR(50),
+                        status INTEGER DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
+                
+            # Verificar si la tabla prize_purchases existe
+            result = connection.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_name = 'prize_purchases'
+            """))
+            
+            if not result.fetchone():
+                print("🔄 Creando tabla 'prize_purchases'...")
+                connection.execute(text("""
+                    CREATE TABLE prize_purchases (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id),
+                        prize_id INTEGER REFERENCES prizes(id),
+                        points_spent INTEGER NOT NULL,
+                        purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        status VARCHAR(20) DEFAULT 'pending',
+                        shipping_address TEXT,
+                        tracking_number VARCHAR(100),
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """))
             
             connection.commit()
             print("✅ Migración completada exitosamente")

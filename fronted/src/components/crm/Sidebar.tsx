@@ -5,6 +5,8 @@ const modules = [
   { name: 'Usuarios', path: '/crm/users' },
   { name: 'Membresías', path: '/crm/memberships' },
   { name: 'Rutinas', path: '/crm/routines' },
+  { name: 'Premios', path: '/crm/prizes' },
+  { name: 'Compras', path: '/crm/purchases' },
   { name: 'Clientes', path: '/crm/clients' },
   { name: 'Reportes', path: '/crm/reports' },
   { name: 'Auditoría', path: '/crm/audit' },

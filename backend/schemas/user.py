@@ -191,6 +191,48 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
+# --- Premios ---
+class PrizeBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    points_cost: int
+    stock: int = 0
+    category: Optional[str] = None
+    status: int = 1  # 0 = inactivo, 1 = activo
+
+class PrizeCreate(PrizeBase):
+    pass
+
+class Prize(PrizeBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class PrizePurchaseBase(BaseModel):
+    user_id: int
+    prize_id: int
+    points_spent: int
+    shipping_address: Optional[str] = None
+    status: str = "pending"  # 'pending', 'shipped', 'delivered', 'cancelled'
+
+class PrizePurchaseCreate(PrizePurchaseBase):
+    pass
+
+class PrizePurchase(PrizePurchaseBase):
+    id: int
+    purchase_date: datetime
+    tracking_number: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    prize: Prize
+
+    class Config:
+        from_attributes = True
+
 class UserResponse(BaseModel):
     access_token: str
     token_type: str

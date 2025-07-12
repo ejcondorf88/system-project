@@ -125,6 +125,35 @@ class ChatMessage(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     user = relationship("User", back_populates="chat_messages")
 
+class Prize(Base):
+    __tablename__ = "prizes"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    image_url = Column(String(500), nullable=True)
+    points_cost = Column(Integer, nullable=False)
+    stock = Column(Integer, default=0)  # 0 = sin stock, >0 = cantidad disponible
+    category = Column(String(50), nullable=True)  # 'ropa', 'equipamiento', 'suplementos', etc.
+    status = Column(Integer, default=1)  # 0 = inactivo, 1 = activo
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    purchases = relationship("PrizePurchase", back_populates="prize")
+
+class PrizePurchase(Base):
+    __tablename__ = "prize_purchases"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    prize_id = Column(Integer, ForeignKey("prizes.id"), nullable=False)
+    points_spent = Column(Integer, nullable=False)
+    purchase_date = Column(DateTime, server_default=func.now())
+    status = Column(String(20), default="pending")  # 'pending', 'shipped', 'delivered', 'cancelled'
+    shipping_address = Column(Text, nullable=True)
+    tracking_number = Column(String(100), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    user = relationship("User", back_populates="prize_purchases")
+    prize = relationship("Prize", back_populates="purchases")
+
 # Actualización del modelo User para relaciones
 class User(Base):
     __tablename__ = "users"
@@ -151,4 +180,5 @@ class User(Base):
     points_rel = relationship("Point", back_populates="user")
     achievements = relationship("UserAchievement", back_populates="user")
     chat_messages = relationship("ChatMessage", back_populates="user")
+    prize_purchases = relationship("PrizePurchase", back_populates="user")
     audit_logs = relationship("AuditLog", back_populates="user") 

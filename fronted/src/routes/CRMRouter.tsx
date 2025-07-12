@@ -4,6 +4,8 @@ import Dashboard from '../components/crm/Dashboard';
 import Users from '../components/crm/Users';
 import Memberships from '../components/crm/Memberships';
 import Routines from '../components/crm/Routines';
+import { Prizes } from '../components/crm/Prizes';
+import { PrizePurchases } from '../components/crm/PrizePurchases';
 import Clients from '../components/crm/Clients';
 import Reports from '../components/crm/Reports';
 import AuditLogs from '../components/admin/AuditLogs';
@@ -20,6 +22,8 @@ export default function CRMRouter() {
         <Route path="users" element={<Users />} />
         <Route path="memberships" element={<Memberships />} />
         <Route path="routines" element={<Routines />} />
+        <Route path="prizes" element={<Prizes />} />
+        <Route path="purchases" element={<PrizePurchases />} />
         <Route path="clients" element={<Clients />} />
         <Route path="reports" element={<Reports />} />
         <Route path="audit" element={<AuditRoute><AuditLogs /></AuditRoute>} />
