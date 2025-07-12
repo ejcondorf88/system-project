@@ -53,10 +53,10 @@ def get_prizes_by_category(category: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.post("/prizes", response_model=Prize)
-def create_prize(prize: PrizeCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def create_prize(prize: PrizeCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Crear un nuevo premio (solo superusuarios)"""
     try:
-        if not current_user.get("is_superuser"):
+        if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
         
         prize_repo = PrizeRepository(db)
@@ -70,10 +70,10 @@ def create_prize(prize: PrizeCreate, db: Session = Depends(get_db), current_user
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.put("/prizes/{prize_id}", response_model=Prize)
-def update_prize(prize_id: int, prize_data: dict, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def update_prize(prize_id: int, prize_data: dict, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Actualizar un premio (solo superusuarios)"""
     try:
-        if not current_user.get("is_superuser"):
+        if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
         
         prize_repo = PrizeRepository(db)
@@ -90,10 +90,10 @@ def update_prize(prize_id: int, prize_data: dict, db: Session = Depends(get_db),
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.delete("/prizes/{prize_id}")
-def delete_prize(prize_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def delete_prize(prize_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Eliminar un premio (solo superusuarios)"""
     try:
-        if not current_user.get("is_superuser"):
+        if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
         
         prize_repo = PrizeRepository(db)
@@ -110,10 +110,10 @@ def delete_prize(prize_id: int, db: Session = Depends(get_db), current_user: dic
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.post("/purchase", response_model=PrizePurchase)
-def purchase_prize(purchase_data: PrizePurchaseCreate, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def purchase_prize(purchase_data: PrizePurchaseCreate, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Comprar un premio con puntos"""
     try:
-        user_id = current_user.get("id")
+        user_id = current_user.id
         if not user_id:
             raise HTTPException(status_code=401, detail="Usuario no autenticado")
         
@@ -136,10 +136,10 @@ def purchase_prize(purchase_data: PrizePurchaseCreate, db: Session = Depends(get
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.get("/purchases/my", response_model=List[PrizePurchase])
-def get_my_purchases(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def get_my_purchases(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener las compras del usuario actual"""
     try:
-        user_id = current_user.get("id")
+        user_id = current_user.id
         if not user_id:
             raise HTTPException(status_code=401, detail="Usuario no autenticado")
         
@@ -150,14 +150,14 @@ def get_my_purchases(db: Session = Depends(get_db), current_user: dict = Depends
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al obtener compras del usuario {current_user.get('id')}: {e}")
+        logger.error(f"Error al obtener compras del usuario {current_user.id}: {e}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.get("/purchases/all", response_model=List[PrizePurchase])
-def get_all_purchases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def get_all_purchases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener todas las compras (solo superusuarios)"""
     try:
-        if not current_user.get("is_superuser"):
+        if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
         
         prize_repo = PrizeRepository(db)
@@ -171,10 +171,10 @@ def get_all_purchases(skip: int = 0, limit: int = 100, db: Session = Depends(get
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 @router.put("/purchases/{purchase_id}/status")
-def update_purchase_status(purchase_id: int, status: str, tracking_number: str = None, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+def update_purchase_status(purchase_id: int, status: str, tracking_number: str = None, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Actualizar el estado de una compra (solo superusuarios)"""
     try:
-        if not current_user.get("is_superuser"):
+        if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
         
         prize_repo = PrizeRepository(db)
