@@ -76,7 +76,7 @@ export default function TrainerProgress() {
 
   // Obtener progreso por enfoque
   const getProgressByFocus = () => {
-    const focusStats = {};
+    const focusStats: Record<string, { total: number; completed: number }> = {};
     
     userRoutines.forEach(ur => {
       const focus = ur.routine.focus;
@@ -89,7 +89,7 @@ export default function TrainerProgress() {
       }
     });
 
-    return Object.entries(focusStats).map(([focus, stats]: [string, any]) => ({
+    return Object.entries(focusStats).map(([focus, stats]) => ({
       focus,
       total: stats.total,
       completed: stats.completed,
@@ -99,7 +99,12 @@ export default function TrainerProgress() {
 
   // Obtener top usuarios
   const getTopUsers = () => {
-    const userStats = {};
+    const userStats: Record<number, { 
+      username: string; 
+      total: number; 
+      completed: number;
+      points: number;
+    }> = {};
     
     userRoutines.forEach(ur => {
       if (!userStats[ur.user_id]) {
@@ -107,7 +112,7 @@ export default function TrainerProgress() {
           username: ur.user.username, 
           total: 0, 
           completed: 0,
-          points: ur.user.points 
+          points: ur.user.points || 0
         };
       }
       userStats[ur.user_id].total++;
@@ -117,7 +122,7 @@ export default function TrainerProgress() {
     });
 
     return Object.values(userStats)
-      .map((stats: any) => ({
+      .map((stats) => ({
         ...stats,
         rate: Math.round((stats.completed / stats.total) * 100)
       }))

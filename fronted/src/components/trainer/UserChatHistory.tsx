@@ -159,7 +159,7 @@ export default function UserChatHistory() {
     <div className="max-w-7xl mx-auto mt-10 space-y-6">
       {/* Header */}
       <div className="bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8">
-        <h1 className="text-4xl font-bold text-green-400 mb-2">Historial de Chat de Usuarios</h1>
+        <h1 className="text-4xl font-bold text-orange-400 mb-2">Historial de Chat de Usuarios</h1>
         <p className="text-white text-lg">Monitorea las conversaciones de los usuarios sobre rutinas</p>
       </div>
 
@@ -170,8 +170,8 @@ export default function UserChatHistory() {
             onClick={() => setActiveTab('users')}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
               activeTab === 'users' 
-                ? 'bg-green-500 text-white' 
-                : 'bg-white/10 text-white hover:bg-green-500/30'
+                ? 'bg-orange-500 text-white' 
+                : 'bg-white/10 text-white hover:bg-orange-500/30'
             }`}
           >
             Usuarios
@@ -180,8 +180,8 @@ export default function UserChatHistory() {
             onClick={() => setActiveTab('analytics')}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
               activeTab === 'analytics' 
-                ? 'bg-green-500 text-white' 
-                : 'bg-white/10 text-white hover:bg-green-500/30'
+                ? 'bg-orange-500 text-white' 
+                : 'bg-white/10 text-white hover:bg-orange-500/30'
             }`}
           >
             Analytics
@@ -192,8 +192,8 @@ export default function UserChatHistory() {
                 onClick={() => setActiveTab('history')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                   activeTab === 'history' 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-white/10 text-white hover:bg-green-500/30'
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-white/10 text-white hover:bg-orange-500/30'
                 }`}
               >
                 Historial de {selectedUser.username}
@@ -202,8 +202,8 @@ export default function UserChatHistory() {
                 onClick={() => setActiveTab('sessions')}
                 className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                   activeTab === 'sessions' 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-white/10 text-white hover:bg-green-500/30'
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-white/10 text-white hover:bg-orange-500/30'
                 }`}
               >
                 Sesiones de {selectedUser.username}
@@ -219,7 +219,7 @@ export default function UserChatHistory() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {users.map((user) => (
                 <div key={user.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <h3 className="text-lg font-bold text-green-400 mb-2">{user.username}</h3>
+                  <h3 className="text-lg font-bold text-orange-400 mb-2">{user.username}</h3>
                   <p className="text-gray-300 text-sm mb-2">{user.email}</p>
                   <span className={`text-sm font-semibold ${
                     user.level === 'Oro' ? 'text-yellow-400' : 
