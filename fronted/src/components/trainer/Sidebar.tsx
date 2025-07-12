@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import UserInfo from '@/components/UserInfo';
 
 const modules = [
   { name: 'Dashboard', path: '/trainer' },
@@ -15,7 +16,7 @@ export function Sidebar() {
       <div className="mb-10 text-2xl font-bold text-orange-400 text-center tracking-wide select-none">
         ENTRENADOR
       </div>
-      <nav className="flex flex-col gap-2">
+      <nav className="flex flex-col gap-2 flex-1">
         {modules.map((mod) => (
           <NavLink
             key={mod.path}
@@ -29,6 +30,9 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+      
+      {/* User Info and Logout */}
+      <UserInfo />
     </aside>
   );
 } 
