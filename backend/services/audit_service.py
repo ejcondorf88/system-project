@@ -17,7 +17,8 @@ class AuditService:
         user_agent: Optional[str] = None,
         field_name: Optional[str] = None,
         old_value: Optional[Any] = None,
-        new_value: Optional[Any] = None
+        new_value: Optional[Any] = None,
+        additional_data: Optional[dict] = None
     ):
         """
         Registra una acción en el log de auditoría

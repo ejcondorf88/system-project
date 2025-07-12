@@ -6,6 +6,8 @@ import Memberships from '../components/crm/Memberships';
 import Routines from '../components/crm/Routines';
 import Clients from '../components/crm/Clients';
 import Reports from '../components/crm/Reports';
+import AuditLogs from '../components/admin/AuditLogs';
+import AuditRoute from '../components/admin/AuditRoute';
 
 export default function CRMRouter() {
   // Aquí deberías validar si el usuario es superusuario (puedes usar un hook de auth)
@@ -20,6 +22,7 @@ export default function CRMRouter() {
         <Route path="routines" element={<Routines />} />
         <Route path="clients" element={<Clients />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="audit" element={<AuditRoute><AuditLogs /></AuditRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

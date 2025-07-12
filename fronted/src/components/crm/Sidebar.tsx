@@ -7,6 +7,7 @@ const modules = [
   { name: 'Rutinas', path: '/crm/routines' },
   { name: 'Clientes', path: '/crm/clients' },
   { name: 'Reportes', path: '/crm/reports' },
+  { name: 'Auditoría', path: '/crm/audit' },
 ];
 
 export function Sidebar() {
