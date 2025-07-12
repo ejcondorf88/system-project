@@ -34,7 +34,7 @@ app.include_router(user.router, prefix="/api/users", tags=["users"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 app.include_router(trainer.router, prefix="/api/trainer", tags=["trainer"])
 app.include_router(audit.router, prefix="/api", tags=["audit"])
-app.include_router(marketplace.router, prefix="/api/marketplace", tags=["marketplace"])
+app.include_router(marketplace.router, tags=["marketplace"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 
 @app.get("/")
