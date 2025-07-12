@@ -60,7 +60,7 @@ export const useMemberships = () => {
       params.append('limit', filters.limit.toString());
       params.append('offset', filters.offset.toString());
 
-      const response = await fetch(`/api/memberships?${params}`, {
+      const response = await fetch(`http://localhost:8080/api/dashboard/memberships?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -84,7 +84,7 @@ export const useMemberships = () => {
     try {
       setError(null);
       
-      const response = await fetch('/api/user-memberships', {
+      const response = await fetch('http://localhost:8080/api/dashboard/user-memberships', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -106,7 +106,7 @@ export const useMemberships = () => {
     try {
       setError(null);
       
-      const response = await fetch('/api/memberships', {
+      const response = await fetch('http://localhost:8080/api/users/memberships', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ export const useMemberships = () => {
     try {
       setError(null);
       
-      const response = await fetch(`/api/memberships/${membershipId}`, {
+      const response = await fetch(`http://localhost:8080/api/dashboard/memberships/${membershipId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +156,7 @@ export const useMemberships = () => {
     try {
       setError(null);
       
-      const response = await fetch(`/api/memberships/${membershipId}`, {
+      const response = await fetch(`http://localhost:8080/api/dashboard/memberships/${membershipId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -179,7 +179,7 @@ export const useMemberships = () => {
     try {
       setError(null);
       
-      const response = await fetch('/api/user-memberships', {
+      const response = await fetch('http://localhost:8080/api/dashboard/user-memberships', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

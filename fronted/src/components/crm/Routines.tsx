@@ -42,13 +42,13 @@ export default function Routines() {
       const token = localStorage.getItem('token');
       
       // Obtener rutinas disponibles
-      const routinesResponse = await axios.get('http://localhost:8080/api/routines/', {
+      const routinesResponse = await axios.get('http://localhost:8080/api/dashboard/routines', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setRoutines(routinesResponse.data);
 
       // Obtener rutinas asignadas a usuarios
-      const userRoutinesResponse = await axios.get('http://localhost:8080/api/user-routines/', {
+      const userRoutinesResponse = await axios.get('http://localhost:8080/api/dashboard/user-routines', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setUserRoutines(userRoutinesResponse.data);

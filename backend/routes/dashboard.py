@@ -102,6 +102,80 @@ def get_memberships(
     memberships = db.query(models.Membership).all()
     return memberships
 
+@router.post("/memberships")
+def create_membership(
+    membership_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Crear una nueva membresía"""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Solo el superusuario puede crear membresías.")
+    
+    try:
+        new_membership = models.Membership(
+            name=membership_data.get("name"),
+            description=membership_data.get("description"),
+            price=membership_data.get("price"),
+            duration_days=membership_data.get("duration_days")
+        )
+        db.add(new_membership)
+        db.commit()
+        db.refresh(new_membership)
+        return new_membership
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error al crear membresía: {str(e)}")
+
+@router.put("/memberships/{membership_id}")
+def update_membership(
+    membership_id: int,
+    membership_data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Actualizar una membresía"""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Solo el superusuario puede actualizar membresías.")
+    
+    membership = db.query(models.Membership).filter(models.Membership.id == membership_id).first()
+    if not membership:
+        raise HTTPException(status_code=404, detail="Membresía no encontrada")
+    
+    try:
+        for key, value in membership_data.items():
+            if hasattr(membership, key):
+                setattr(membership, key, value)
+        
+        db.commit()
+        db.refresh(membership)
+        return membership
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error al actualizar membresía: {str(e)}")
+
+@router.delete("/memberships/{membership_id}")
+def delete_membership(
+    membership_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Eliminar una membresía"""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Solo el superusuario puede eliminar membresías.")
+    
+    membership = db.query(models.Membership).filter(models.Membership.id == membership_id).first()
+    if not membership:
+        raise HTTPException(status_code=404, detail="Membresía no encontrada")
+    
+    try:
+        db.delete(membership)
+        db.commit()
+        return {"message": "Membresía eliminada exitosamente"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Error al eliminar membresía: {str(e)}")
+
 @router.get("/user-memberships")
 def get_user_memberships(
     db: Session = Depends(get_db),

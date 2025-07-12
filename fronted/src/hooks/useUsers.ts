@@ -49,7 +49,7 @@ export const useUsers = () => {
       params.append('limit', filters.limit.toString());
       params.append('offset', filters.offset.toString());
 
-      const response = await fetch(`/api/users?${params}`, {
+      const response = await fetch(`http://localhost:8080/api/users?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -73,7 +73,7 @@ export const useUsers = () => {
     try {
       setError(null);
       
-      const response = await fetch('/api/users/create', {
+      const response = await fetch('http://localhost:8080/api/users/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export const useUsers = () => {
     try {
       setError(null);
       
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export const useUsers = () => {
     try {
       setError(null);
       
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -146,7 +146,7 @@ export const useUsers = () => {
     try {
       setError(null);
       
-      const response = await fetch('/api/users/assign-points', {
+      const response = await fetch('http://localhost:8080/api/users/assign-points', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -171,7 +171,7 @@ export const useUsers = () => {
     try {
       setError(null);
       
-      const response = await fetch(`/api/users/${userId}/level`, {
+      const response = await fetch(`http://localhost:8080/api/users/${userId}/level`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

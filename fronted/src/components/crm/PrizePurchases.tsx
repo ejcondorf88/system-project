@@ -14,14 +14,14 @@ const statusOptions = [
 
 export function PrizePurchases() {
   const { allPurchases, loading, getAllPurchases, updatePurchaseStatus } = useMarketplace();
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('pending'); // Por defecto mostrar pendientes
   const [editingPurchase, setEditingPurchase] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
 
   useEffect(() => {
     getAllPurchases();
-  }, [getAllPurchases]);
+  }, []); // Solo se ejecuta una vez al montar el componente
 
   const filteredPurchases = selectedStatus === 'all' 
     ? allPurchases 
@@ -33,8 +33,10 @@ export function PrizePurchases() {
       setTrackingNumber('');
       setIsModalOpen(false);
       setEditingPurchase(null);
+      toast.success(`Estado actualizado a: ${statusOptions.find(opt => opt.value === newStatus)?.label}`);
     } catch (error) {
       console.error('Error:', error);
+      toast.error('Error al actualizar el estado de la compra');
     }
   };
 
@@ -77,7 +79,14 @@ export function PrizePurchases() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-white">Gestión de Compras</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-white">Gestión de Compras</h1>
+          {allPurchases.filter(p => p.status === 'pending').length > 0 && (
+            <p className="text-orange-400 text-sm mt-1">
+              ⚠️ {allPurchases.filter(p => p.status === 'pending').length} compra(s) pendiente(s) requieren atención
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-4">
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
             <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
@@ -131,7 +140,18 @@ export function PrizePurchases() {
 
       {/* Lista de Compras */}
       <div className="space-y-4">
-        {filteredPurchases.map((purchase) => (
+        {filteredPurchases.length === 0 ? (
+          <Card className="bg-white/10 border-white/20">
+            <CardContent className="p-8 text-center">
+              <div className="text-6xl mb-4">🛒</div>
+              <h3 className="text-xl font-bold text-white mb-2">No hay compras registradas</h3>
+              <p className="text-gray-300">
+                Cuando los usuarios realicen compras con sus puntos, aparecerán aquí para su gestión.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredPurchases.map((purchase) => (
           <Card key={purchase.id} className="bg-white/10 border-white/20">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -145,6 +165,15 @@ export function PrizePurchases() {
                 </div>
                 <div className="flex gap-2">
                   {getStatusBadge(purchase.status)}
+                  {purchase.status === 'pending' && (
+                    <button
+                      onClick={() => handleStatusUpdate(purchase.id, 'shipped')}
+                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+                      title="Marcar como enviado"
+                    >
+                      Enviar
+                    </button>
+                  )}
                   <button
                     onClick={() => openStatusModal(purchase)}
                     className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
@@ -182,7 +211,8 @@ export function PrizePurchases() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        ))
+        )}
       </div>
 
       {/* Modal para actualizar estado */}
@@ -220,13 +250,18 @@ export function PrizePurchases() {
               </div>
               
               <div>
-                <label className="block text-white mb-2">Número de Seguimiento</label>
+                <label className="block text-white mb-2">
+                  Número de Seguimiento
+                  {editingPurchase.status === 'pending' && editingPurchase.status !== 'shipped' && (
+                    <span className="text-orange-400 text-sm ml-2">(Recomendado para envíos)</span>
+                  )}
+                </label>
                 <input
                   type="text"
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
                   className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"
-                  placeholder="Opcional"
+                  placeholder={editingPurchase.status === 'pending' ? "Ej: TRK123456789" : "Opcional"}
                 />
               </div>
               

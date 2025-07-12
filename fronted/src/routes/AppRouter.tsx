@@ -9,13 +9,13 @@ import { SuperuserRoute, TrainerRoute } from "@/components/ProtectedRoute";
 import CRMRouter from "./CRMRouter";
 import TrainerRouter from "./TrainerRouter";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import Home from "./pages/Home";
+import Home from "@/components/Home";
 
 function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/chat" element={

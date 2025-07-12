@@ -12,6 +12,7 @@ from database.models import User
 from schemas.user import UserCreate, UserUpdate, Role, RoleCreate, Membership, MembershipCreate, Routine, RoutineCreate, Point, PointCreate, Achievement, AchievementCreate
 from services.audit_service import AuditService
 from middleware.audit_middleware import AuditMiddleware
+from pydantic import BaseModel
 
 router = APIRouter(
     tags= ["Users"]
@@ -30,7 +31,7 @@ def create_user(
     db: Session = Depends(get_db)
 ):
     # Crear usuario
-    new_user = user.crear_usuario(usuario, db)
+    new_user = user_repository.crear_usuario(usuario, db)
     
     # Registrar auditoría
     ip_address = AuditMiddleware.get_client_ip(request)
@@ -79,7 +80,7 @@ def update_me(
     old_user = db.query(models.User).filter(models.User.id == current_user.id).first()
     
     # Actualizar usuario
-    updated_user = user.actualizar_usuario(current_user.id, user_data, db)
+    updated_user = user_repository.actualizar_usuario(current_user.id, user_data, db)
     
     # Registrar auditoría para cada campo modificado
     ip_address = AuditMiddleware.get_client_ip(request)
@@ -153,12 +154,15 @@ def create_point(point: PointCreate, db: Session = Depends(get_db), current_user
         raise HTTPException(status_code=403, detail="Solo el superusuario puede asignar puntos.")
     return user_repository.crear_punto(db, user_id=point.user_id, amount=point.amount, reason=point.reason)
 
+class AssignPointsRequest(BaseModel):
+    user_id: int
+    amount: int
+    reason: str
+
 # Nuevo endpoint para asignar puntos y actualizar el total del usuario
 @router.post("/assign-points")
 def assign_points_to_user(
-    user_id: int,
-    amount: int,
-    reason: str,
+    data: AssignPointsRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -166,58 +170,58 @@ def assign_points_to_user(
         raise HTTPException(status_code=403, detail="Solo el superusuario puede asignar puntos.")
     
     # Verificar que el usuario existe
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+    user = db.query(models.User).filter(models.User.id == data.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
     # Crear el registro de puntos
-    point = user_repository.crear_punto(db, user_id=user_id, amount=amount, reason=reason)
+    point = user_repository.crear_punto(db, user_id=data.user_id, amount=data.amount, reason=data.reason)
     
     # Actualizar el total de puntos del usuario
-    user.points += amount
+    user.points += data.amount
     db.commit()
     db.refresh(user)
     
     return {
-        "message": f"Se asignaron {amount} puntos a {user.username}",
-        "user_id": user_id,
-        "amount": amount,
-        "reason": reason,
+        "message": f"Se asignaron {data.amount} puntos a {user.username}",
+        "user_id": data.user_id,
+        "amount": data.amount,
+        "reason": data.reason,
         "new_total": user.points
     }
+
+class ChangeLevelRequest(BaseModel):
+    level: str
 
 # Endpoint para cambiar nivel de usuario
 @router.put("/{user_id}/level")
 def change_user_level(
     user_id: int,
-    level: str,
+    data: ChangeLevelRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Solo el superusuario puede cambiar niveles.")
     
-    # Validar que el nivel sea válido
     valid_levels = ["Bronce", "Plata", "Oro"]
-    if level not in valid_levels:
+    if data.level not in valid_levels:
         raise HTTPException(status_code=400, detail=f"Nivel inválido. Debe ser uno de: {', '.join(valid_levels)}")
     
-    # Verificar que el usuario existe
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
-    # Actualizar el nivel
     old_level = user.level
-    user.level = level
+    user.level = data.level
     db.commit()
     db.refresh(user)
     
     return {
-        "message": f"Nivel de {user.username} cambiado de {old_level} a {level}",
+        "message": f"Nivel de {user.username} cambiado de {old_level} a {data.level}",
         "user_id": user_id,
         "old_level": old_level,
-        "new_level": level
+        "new_level": data.level
     }
 
 # Endpoint para obtener puntos de un usuario específico

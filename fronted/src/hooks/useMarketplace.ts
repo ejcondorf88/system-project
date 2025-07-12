@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import marketplaceAdapter from '@/adapters/marketplace.adapter';
 import type { Prize, PrizePurchase, PurchaseRequest } from '@/adapters/marketplace.adapter';
 import { toast } from 'sonner';
@@ -106,6 +106,9 @@ export const useMarketplace = (): UseMarketplaceReturn => {
     }
   };
 
+  // Memoizar las funciones para evitar recreaciones
+  const memoizedGetAllPurchases = useCallback(getAllPurchases, []);
+
   const createPrize = async (prizeData: Omit<Prize, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       setLoading(true);
@@ -185,7 +188,7 @@ export const useMarketplace = (): UseMarketplaceReturn => {
     getPrizesByCategory,
     purchasePrize,
     getMyPurchases,
-    getAllPurchases,
+    getAllPurchases: memoizedGetAllPurchases,
     createPrize,
     updatePrize,
     deletePrize,
