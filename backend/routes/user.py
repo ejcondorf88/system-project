@@ -257,6 +257,49 @@ def get_user_points(
     }
 
 # --- Logros ---
+@router.get("/my-routines")
+def get_my_routines(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener las rutinas asignadas al usuario actual"""
+    try:
+        # Obtener las rutinas asignadas al usuario actual
+        user_routines = db.query(models.UserRoutine).filter(
+            models.UserRoutine.user_id == current_user.id
+        ).all()
+        
+        # Enriquecer con información de la rutina
+        result = []
+        for ur in user_routines:
+            routine = db.query(models.Routine).filter(models.Routine.id == ur.routine_id).first()
+            
+            if routine:
+                result.append({
+                    "id": ur.id,
+                    "user_id": ur.user_id,
+                    "routine_id": ur.routine_id,
+                    "assigned_at": ur.assigned_at.isoformat() if ur.assigned_at else None,
+                    "completed_at": ur.completed_at.isoformat() if ur.completed_at else None,
+                    "status": ur.status,
+                    "created_at": ur.created_at.isoformat() if ur.created_at else None,
+                    "updated_at": ur.updated_at.isoformat() if ur.updated_at else None,
+                    "routine": {
+                        "id": routine.id,
+                        "name": routine.name,
+                        "focus": routine.focus,
+                        "level": routine.level,
+                        "description": routine.description,
+                        "status": routine.status,
+                        "created_at": routine.created_at.isoformat() if routine.created_at else None,
+                        "updated_at": routine.updated_at.isoformat() if routine.updated_at else None
+                    }
+                })
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener rutinas: {str(e)}")
+
 @router.post("/achievements", response_model=Achievement)
 def create_achievement(achievement: AchievementCreate, db: Session = Depends(get_db)):
     return user_repository.crear_logro(db, name=achievement.name, description=achievement.description)

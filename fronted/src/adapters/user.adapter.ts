@@ -28,6 +28,27 @@ export interface UserResponse {
   user: UserData;
 }
 
+export interface UserRoutine {
+  id: number;
+  user_id: number;
+  routine_id: number;
+  assigned_at: string;
+  completed_at?: string;
+  status: number;
+  created_at: string;
+  updated_at: string;
+  routine: {
+    id: number;
+    name: string;
+    focus: string;
+    level: string;
+    description: string;
+    status: number;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 const userAdapter = {
   async getCurrentUser(): Promise<UserData> {
     try {
@@ -80,6 +101,28 @@ const userAdapter = {
     } catch (error) {
       console.error('Error getting user points:', error);
       return 0;
+    }
+  },
+
+  async getMyRoutines(): Promise<UserRoutine[]> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await axios.get(`${API_URL}/users/my-routines`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.detail || 'Error al obtener rutinas asignadas');
+      }
+      throw error;
     }
   }
 };

@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaSignOutAlt } from 'react-icons/fa';
+import { Target, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { useRoutines } from '@/hooks/useRoutines';
 import { useAuth } from '@/hooks/useAuth';
+import userAdapter, { type UserRoutine } from '@/adapters/user.adapter';
 import type { Routine } from '@/adapters/routines.adapter';
 import {
   Dialog,
@@ -13,7 +15,7 @@ import {
   DialogFooter,
   DialogClose,
 } from './ui/dialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const levelColors: Record<string, string> = {
   Gratis: 'bg-green-500/20 text-green-300',
@@ -26,6 +28,59 @@ export const Routines = () => {
   const { logout } = useAuth();
   const { routines, canAccessRoutine } = useRoutines();
   const [selectedRoutine, setSelectedRoutine] = useState<Routine | null>(null);
+  const [myRoutines, setMyRoutines] = useState<UserRoutine[]>([]);
+  const [loadingMyRoutines, setLoadingMyRoutines] = useState(false);
+  const [activeTab, setActiveTab] = useState<'available' | 'assigned'>('assigned');
+
+  // Cargar rutinas asignadas
+  useEffect(() => {
+    const loadMyRoutines = async () => {
+      try {
+        setLoadingMyRoutines(true);
+        const data = await userAdapter.getMyRoutines();
+        setMyRoutines(data);
+      } catch (error) {
+        console.error('Error loading assigned routines:', error);
+      } finally {
+        setLoadingMyRoutines(false);
+      }
+    };
+
+    loadMyRoutines();
+  }, []);
+
+  const getLevelColor = (level: string) => {
+    const levelMap: Record<string, string> = {
+      'beginner': 'bg-green-500/20 text-green-300',
+      'intermediate': 'bg-yellow-500/20 text-yellow-300',
+      'advanced': 'bg-red-500/20 text-red-300',
+      'principiante': 'bg-green-500/20 text-green-300',
+      'intermedio': 'bg-yellow-500/20 text-yellow-300',
+      'avanzado': 'bg-red-500/20 text-red-300',
+    };
+    return levelMap[level.toLowerCase()] || 'bg-gray-500/20 text-gray-300';
+  };
+
+  const getFocusColor = (focus: string) => {
+    const focusMap: Record<string, string> = {
+      'fuerza': 'bg-blue-500/20 text-blue-300',
+      'cardio': 'bg-red-500/20 text-red-300',
+      'flexibilidad': 'bg-purple-500/20 text-purple-300',
+      'resistencia': 'bg-orange-500/20 text-orange-300',
+      'equilibrio': 'bg-indigo-500/20 text-indigo-300',
+    };
+    return focusMap[focus.toLowerCase()] || 'bg-gray-500/20 text-gray-300';
+  };
+
+  const getStatusText = (status: number, completedAt?: string) => {
+    if (completedAt) return 'Completada';
+    return status === 1 ? 'Activa' : 'Inactiva';
+  };
+
+  const getStatusColor = (status: number, completedAt?: string) => {
+    if (completedAt) return 'bg-green-500/20 text-green-400';
+    return status === 1 ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400';
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
@@ -49,53 +104,170 @@ export const Routines = () => {
             Salir
           </button>
         </div>
-        <div className="space-y-4">
-          {routines.map((routine, index) => {
-            const canAccess = canAccessRoutine(routine.level);
-            return (
-              <motion.div
-                key={routine.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-lg ${
-                  !canAccess ? 'opacity-60' : ''
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <h2 className="text-lg font-semibold text-white">{routine.name}</h2>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${levelColors[routine.level]}`}>
-                    {routine.level}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-300 mt-1">{routine.focus}</p>
-                
-                {!canAccess && (
-                  <div className="mt-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                    <p className="text-xs text-yellow-300">
-                      🔒 Necesitas nivel {routine.level} o superior para acceder
-                    </p>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center mt-3 text-xs text-orange-300">
-                  <span>Duración: {routine.duration}</span>
-                  <button 
-                    onClick={() => setSelectedRoutine(routine)}
-                    disabled={!canAccess}
-                    className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
-                      canAccess 
-                        ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                        : 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    {canAccess ? 'Ver detalles' : 'Bloqueado'}
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
+
+        {/* Pestañas */}
+        <div className="flex bg-white/10 rounded-lg p-1 mb-6">
+          <button
+            onClick={() => setActiveTab('assigned')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-colors ${
+              activeTab === 'assigned'
+                ? 'bg-orange-500 text-white'
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            <Target size={16} className="inline mr-2" />
+            Asignadas
+          </button>
+          <button
+            onClick={() => setActiveTab('available')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-colors ${
+              activeTab === 'available'
+                ? 'bg-orange-500 text-white'
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            Disponibles
+          </button>
         </div>
+
+        {/* Contenido de rutinas asignadas */}
+        {activeTab === 'assigned' && (
+          <div className="space-y-4">
+            {loadingMyRoutines ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p className="text-gray-300">Cargando rutinas asignadas...</p>
+              </div>
+            ) : myRoutines.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Target className="text-orange-400" size={24} />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">No tienes rutinas asignadas</h2>
+                <p className="text-gray-300 mb-4">
+                  Tu entrenador aún no te ha asignado ninguna rutina personalizada.
+                </p>
+                <button
+                  onClick={() => setActiveTab('available')}
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Ver Rutinas Disponibles
+                </button>
+              </div>
+            ) : (
+              myRoutines.map((userRoutine, index) => (
+                <motion.div
+                  key={userRoutine.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-lg"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <h2 className="text-lg font-semibold text-white line-clamp-2">
+                      {userRoutine.routine.name}
+                    </h2>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${getStatusColor(userRoutine.status, userRoutine.completed_at)}`}>
+                      {getStatusText(userRoutine.status, userRoutine.completed_at)}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-300 mb-3 line-clamp-2">
+                    {userRoutine.routine.description}
+                  </p>
+
+                  <div className="flex gap-2 mb-3">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${getFocusColor(userRoutine.routine.focus)}`}>
+                      {userRoutine.routine.focus}
+                    </span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${getLevelColor(userRoutine.routine.level)}`}>
+                      {userRoutine.routine.level === 'beginner' ? 'Principiante' : 
+                       userRoutine.routine.level === 'intermediate' ? 'Intermedio' : 
+                       userRoutine.routine.level === 'advanced' ? 'Avanzado' : userRoutine.routine.level}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 text-xs text-gray-400 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={12} />
+                      <span>Asignada: {new Date(userRoutine.assigned_at).toLocaleDateString()}</span>
+                    </div>
+                    
+                    {userRoutine.completed_at && (
+                      <div className="flex items-center gap-2">
+                        <CheckCircle size={12} />
+                        <span>Completada: {new Date(userRoutine.completed_at).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button 
+                    onClick={() => navigate('/chat', { 
+                      state: { 
+                        selectedRoutine: userRoutine.routine,
+                        routineStarted: true 
+                      } 
+                    })}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg transition-colors font-semibold text-sm"
+                  >
+                    {userRoutine.completed_at ? 'Ver Detalles' : 'Comenzar Rutina'}
+                  </button>
+                </motion.div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Contenido de rutinas disponibles */}
+        {activeTab === 'available' && (
+          <div className="space-y-4">
+            {routines.map((routine, index) => {
+              const canAccess = canAccessRoutine(routine.level);
+              return (
+                <motion.div
+                  key={routine.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-lg ${
+                    !canAccess ? 'opacity-60' : ''
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <h2 className="text-lg font-semibold text-white">{routine.name}</h2>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${levelColors[routine.level]}`}>
+                      {routine.level}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-300 mt-1">{routine.focus}</p>
+                  
+                  {!canAccess && (
+                    <div className="mt-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                      <p className="text-xs text-yellow-300">
+                        🔒 Necesitas nivel {routine.level} o superior para acceder
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center mt-3 text-xs text-orange-300">
+                    <span>Duración: {routine.duration}</span>
+                    <button 
+                      onClick={() => setSelectedRoutine(routine)}
+                      disabled={!canAccess}
+                      className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
+                        canAccess 
+                          ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                          : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                      }`}
+                    >
+                      {canAccess ? 'Ver detalles' : 'Bloqueado'}
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </main>
       {/* Modal de detalles de rutina */}
       <Dialog open={!!selectedRoutine} onOpenChange={open => !open && setSelectedRoutine(null)}>
