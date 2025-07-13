@@ -219,8 +219,9 @@ class PrizePurchaseBase(BaseModel):
     shipping_address: Optional[str] = None
     status: str = "pending"  # 'pending', 'shipped', 'delivered', 'cancelled'
 
-class PrizePurchaseCreate(PrizePurchaseBase):
-    pass
+class PrizePurchaseCreate(BaseModel):
+    prize_id: int
+    shipping_address: Optional[str] = None
 
 class PrizePurchase(PrizePurchaseBase):
     id: int
@@ -229,6 +230,33 @@ class PrizePurchase(PrizePurchaseBase):
     created_at: datetime
     updated_at: datetime
     prize: Prize
+
+    class Config:
+        from_attributes = True
+
+# Esquema simplificado para usuario en compras
+class UserForPurchase(BaseModel):
+    id: int
+    username: str
+    email: str
+    phone: Optional[str] = None
+    level: str = "Bronce"
+    points: int = 0
+    is_superuser: bool = False
+    is_trainer: bool = False
+    status: int = 1
+
+    class Config:
+        from_attributes = True
+
+class PrizePurchaseWithUser(PrizePurchaseBase):
+    id: int
+    purchase_date: datetime
+    tracking_number: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    prize: Prize
+    user: UserForPurchase
 
     class Config:
         from_attributes = True

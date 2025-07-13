@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, load_only
 from database.models import Prize, PrizePurchase, User
 from schemas.user import PrizeCreate, PrizePurchaseCreate
 from typing import List, Optional
@@ -107,4 +107,11 @@ class PrizeRepository:
 
     def get_all_purchases(self, skip: int = 0, limit: int = 100) -> List[PrizePurchase]:
         """Obtener todas las compras (para administradores)"""
-        return self.db.query(PrizePurchase).offset(skip).limit(limit).all() 
+        return self.db.query(PrizePurchase).options(
+            joinedload(PrizePurchase.user).load_only(
+                User.id, User.username, User.email, User.phone, 
+                User.level, User.points, User.is_superuser, 
+                User.is_trainer, User.status
+            ),
+            joinedload(PrizePurchase.prize)
+        ).offset(skip).limit(limit).all() 

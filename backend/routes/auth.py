@@ -10,6 +10,8 @@ from core.security import create_access_token, get_current_user
 from fastapi import APIRouter, HTTPException, status, Depends, Response
 from sqlalchemy.orm import Session
 import json
+import asyncio
+from services.whatsapp_service import send_welcome_message
 router = APIRouter(tags=["auth"])
 
 @router.post("/login", response_model=UserResponse)
@@ -93,7 +95,20 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
             max_age=3600
         )
 
-        print("5. Preparando respuesta")
+        print("5. Enviando mensaje de bienvenida por WhatsApp")
+        # Enviar mensaje de bienvenida por WhatsApp de forma asíncrona
+        if db_user.phone:
+            try:
+                # Ejecutar en un thread separado para no bloquear la respuesta
+                loop = asyncio.get_event_loop()
+                loop.create_task(send_welcome_message(db_user.phone, db_user.username))
+                print(f"   - Mensaje de bienvenida programado para {db_user.username} ({db_user.phone})")
+            except Exception as e:
+                print(f"   - Error al programar mensaje de WhatsApp: {e}")
+        else:
+            print("   - No se envió mensaje de WhatsApp (sin número de teléfono)")
+
+        print("6. Preparando respuesta")
         # Al preparar la respuesta, aseguramos que achievements sea un string
         user_dict = db_user.__dict__.copy() if 'db_user' in locals() else user.__dict__.copy()
         user_dict['achievements'] = user_dict.get('achievements_json', '[]')
@@ -103,7 +118,7 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
             user=user_dict
         )
 
-        print("6. Registro completado exitosamente")
+        print("7. Registro completado exitosamente")
         print(f"{'='*50}\n")
         return result
 

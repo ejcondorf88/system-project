@@ -1,10 +1,12 @@
 import uvicorn
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database.database import Base, engine
-from routes import auth, user, dashboard, trainer, audit, marketplace
+from routes import auth, user, dashboard, trainer, audit, marketplace, whatsapp
 from api import chat
 from config.settings import settings
+from services.whatsapp_service import initialize_whatsapp
 
 
 # Crear las tablas en la base de datos
@@ -28,6 +30,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Evento que se ejecuta al iniciar la aplicación"""
+    print("🚀 Iniciando aplicación...")
+    
+    # Inicializar WhatsApp en segundo plano
+    try:
+        print("📱 Inicializando servicio de WhatsApp...")
+        # Ejecutar en un thread separado para no bloquear el inicio
+        loop = asyncio.get_event_loop()
+        loop.create_task(initialize_whatsapp())
+        print("✅ Servicio de WhatsApp inicializado en segundo plano")
+    except Exception as e:
+        print(f"⚠️ Error al inicializar WhatsApp: {e}")
+        print("La aplicación continuará sin WhatsApp")
+
 # Rutas
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(user.router, prefix="/api/users", tags=["users"])
@@ -36,6 +54,7 @@ app.include_router(trainer.router, prefix="/api/trainer", tags=["trainer"])
 app.include_router(audit.router, prefix="/api", tags=["audit"])
 app.include_router(marketplace.router, tags=["marketplace"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
+app.include_router(whatsapp.router, prefix="/api/whatsapp", tags=["whatsapp"])
 
 @app.get("/")
 def read_root():

@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Users as UsersIcon, Search, Filter, Plus, Edit, Trash2, Award, Crown, UserPlus, RefreshCw, Mail, Phone, Calendar } from 'lucide-react';
+import { Users as UsersIcon, Search, Filter, Plus, Edit, Trash2, Award, Crown, UserPlus, RefreshCw, Mail, Phone, Calendar, MessageCircle } from 'lucide-react';
 import { useUsers, type User } from '../../hooks/useUsers';
+import { useWhatsApp } from '../../hooks/useWhatsApp';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
-  type: 'points' | 'level';
+  type: 'points' | 'level' | 'whatsapp';
 }
 
 const AssignPointsModal = ({ isOpen, onClose, user, type }: ModalProps) => {
@@ -171,6 +172,159 @@ const ChangeLevelModal = ({ isOpen, onClose, user, type }: ModalProps) => {
   );
 };
 
+const WhatsAppModal = ({ isOpen, onClose, user, type }: ModalProps) => {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const { sendWelcomeCRM, sendMessage, isLoading, error, clearError } = useWhatsApp();
+
+  const handleSendWelcome = async () => {
+    if (!user || !user.phone) {
+      alert('El usuario no tiene número de teléfono registrado');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      clearError();
+      
+      const result = await sendWelcomeCRM(user.phone, user.username);
+      
+      if (result.success) {
+        alert('Mensaje de bienvenida enviado exitosamente');
+        onClose();
+      } else {
+        alert('Error al enviar mensaje de bienvenida');
+      }
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendCustomMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !user.phone || !message.trim()) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      clearError();
+      
+      const result = await sendMessage(user.phone, message);
+      
+      if (result.success) {
+        alert('Mensaje enviado exitosamente');
+        onClose();
+        setMessage('');
+      } else {
+        alert('Error al enviar mensaje');
+      }
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen || !user) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-200">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="p-2 bg-green-100 rounded-lg">
+            <MessageCircle className="w-6 h-6 text-green-600" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900">
+            Enviar WhatsApp a {user.username}
+          </h3>
+        </div>
+        
+        {!user.phone ? (
+          <div className="text-center py-6">
+            <MessageCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <p className="text-slate-600 mb-4">
+              Este usuario no tiene número de teléfono registrado
+            </p>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium"
+            >
+              Cerrar
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-2">
+                <Phone className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">Número de teléfono:</span>
+              </div>
+              <p className="text-blue-700">{user.phone}</p>
+            </div>
+
+            {/* Mensaje de Bienvenida */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-2">Mensaje de Bienvenida</h4>
+              <p className="text-sm text-slate-600 mb-3">
+                Envía un mensaje de bienvenida personalizado al usuario
+              </p>
+              <button
+                onClick={handleSendWelcome}
+                disabled={loading || isLoading}
+                className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 font-medium"
+              >
+                {loading || isLoading ? 'Enviando...' : 'Enviar Bienvenida'}
+              </button>
+            </div>
+
+            {/* Mensaje Personalizado */}
+            <div className="border border-slate-200 rounded-lg p-4">
+              <h4 className="font-medium text-slate-900 mb-2">Mensaje Personalizado</h4>
+              <form onSubmit={handleSendCustomMessage} className="space-y-3">
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Escribe tu mensaje personalizado..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  rows={3}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={loading || isLoading || !message.trim()}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50 font-medium"
+                >
+                  {loading || isLoading ? 'Enviando...' : 'Enviar Mensaje'}
+                </button>
+              </form>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition font-medium"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function Users() {
   const {
     users,
@@ -187,14 +341,14 @@ export default function Users() {
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     user: User | null;
-    type: 'points' | 'level';
+    type: 'points' | 'level' | 'whatsapp';
   }>({
     isOpen: false,
     user: null,
     type: 'points'
   });
 
-  const openModal = (user: User, type: 'points' | 'level') => {
+  const openModal = (user: User, type: 'points' | 'level' | 'whatsapp') => {
     setModalState({ isOpen: true, user, type });
   };
 
@@ -423,6 +577,18 @@ export default function Users() {
                           >
                             <Crown className="w-4 h-4" />
                           </button>
+                          <button
+                            onClick={() => openModal(user, 'whatsapp')}
+                            className={`p-1 rounded transition-colors ${
+                              user.phone 
+                                ? 'text-green-600 hover:text-green-900 hover:bg-green-50' 
+                                : 'text-slate-400 cursor-not-allowed'
+                            }`}
+                            title={user.phone ? 'Enviar WhatsApp' : 'Sin número de teléfono'}
+                            disabled={!user.phone}
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -453,6 +619,12 @@ export default function Users() {
         onClose={closeModal}
         user={modalState.user}
         type="level"
+      />
+      <WhatsAppModal
+        isOpen={modalState.isOpen && modalState.type === 'whatsapp'}
+        onClose={closeModal}
+        user={modalState.user}
+        type="whatsapp"
       />
     </div>
   );

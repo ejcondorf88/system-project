@@ -18,6 +18,11 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8080",
     ]
     
+    # Configuración de WhatsApp
+    WHATSAPP_ENABLED: bool = True
+    WHATSAPP_SESSION_DIR: str = "./whatsapp_session"
+    WHATSAPP_COUNTRY_CODE: str = "52"  # Código de país por defecto (México)
+    
     class Config:
         env_file = ".env"
         extra = "allow"

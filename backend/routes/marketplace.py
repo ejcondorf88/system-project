@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database.database import get_db
 from repository.prize import PrizeRepository
-from schemas.user import Prize, PrizeCreate, PrizePurchase, PrizePurchaseCreate
+from schemas.user import Prize, PrizeCreate, PrizePurchase, PrizePurchaseCreate, PrizePurchaseWithUser
 from core.security import get_current_user
 from typing import List
 import logging
@@ -153,7 +153,7 @@ def get_my_purchases(db: Session = Depends(get_db), current_user = Depends(get_c
         logger.error(f"Error al obtener compras del usuario {current_user.id}: {e}")
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
-@router.get("/purchases/all", response_model=List[PrizePurchase])
+@router.get("/purchases/all", response_model=List[PrizePurchaseWithUser])
 def get_all_purchases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Obtener todas las compras (solo superusuarios)"""
     try:

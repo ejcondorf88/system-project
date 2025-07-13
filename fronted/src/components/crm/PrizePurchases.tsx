@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMarketplace } from '@/hooks/useMarketplace';
+import { useWhatsApp } from '@/hooks/useWhatsApp';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +15,14 @@ const statusOptions = [
 
 export function PrizePurchases() {
   const { allPurchases, loading, getAllPurchases, updatePurchaseStatus } = useMarketplace();
+  const { sendPurchaseNotification } = useWhatsApp();
   const [selectedStatus, setSelectedStatus] = useState<string>('pending'); // Por defecto mostrar pendientes
   const [editingPurchase, setEditingPurchase] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
+  const [customMessage, setCustomMessage] = useState('');
 
   useEffect(() => {
     getAllPurchases();
@@ -37,6 +42,35 @@ export function PrizePurchases() {
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error al actualizar el estado de la compra');
+    }
+  };
+
+  const openWhatsAppModal = (purchase: any) => {
+    setSelectedPurchase(purchase);
+    setCustomMessage('');
+    setIsWhatsAppModalOpen(true);
+  };
+
+  const handleSendWhatsApp = async () => {
+    if (!selectedPurchase) return;
+    
+    try {
+      // Obtener el teléfono del usuario
+      const phone = selectedPurchase.user?.phone || selectedPurchase.shipping_address || '';
+      
+      if (!phone) {
+        toast.error('No hay número de teléfono disponible para enviar el mensaje');
+        return;
+      }
+
+      await sendPurchaseNotification(phone, selectedPurchase, customMessage);
+      toast.success('Mensaje de WhatsApp enviado exitosamente');
+      setIsWhatsAppModalOpen(false);
+      setSelectedPurchase(null);
+      setCustomMessage('');
+    } catch (error) {
+      console.error('Error al enviar WhatsApp:', error);
+      toast.error('Error al enviar mensaje de WhatsApp');
     }
   };
 
@@ -165,21 +199,30 @@ export function PrizePurchases() {
                 </div>
                 <div className="flex gap-2">
                   {getStatusBadge(purchase.status)}
-                  {purchase.status === 'pending' && (
+                  <div className="flex gap-2">
+                    {purchase.status === 'pending' && (
+                      <button
+                        onClick={() => handleStatusUpdate(purchase.id, 'shipped')}
+                        className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
+                        title="Marcar como enviado"
+                      >
+                        Enviar
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleStatusUpdate(purchase.id, 'shipped')}
-                      className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm"
-                      title="Marcar como enviado"
+                      onClick={() => openWhatsAppModal(purchase)}
+                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
+                      title="Enviar notificación por WhatsApp"
                     >
-                      Enviar
+                      📱 WhatsApp
                     </button>
-                  )}
-                  <button
-                    onClick={() => openStatusModal(purchase)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
-                  >
-                    Actualizar Estado
-                  </button>
+                    <button
+                      onClick={() => openStatusModal(purchase)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      Actualizar Estado
+                    </button>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -277,6 +320,69 @@ export function PrizePurchases() {
                     setIsModalOpen(false);
                     setEditingPurchase(null);
                     setTrackingNumber('');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de WhatsApp */}
+      {isWhatsAppModalOpen && selectedPurchase && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Enviar Notificación por WhatsApp
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white mb-2">Compra</label>
+                <p className="text-gray-300">#{selectedPurchase.id} - {selectedPurchase.prize.name}</p>
+              </div>
+              
+              <div>
+                <label className="block text-white mb-2">Estado Actual</label>
+                {getStatusBadge(selectedPurchase.status)}
+              </div>
+              
+              <div>
+                <label className="block text-white mb-2">Usuario</label>
+                <p className="text-gray-300">{selectedPurchase.user?.username || 'Usuario no encontrado'}</p>
+              </div>
+              
+              <div>
+                <label className="block text-white mb-2">Teléfono</label>
+                <p className="text-gray-300">{selectedPurchase.user?.phone || selectedPurchase.shipping_address || 'No especificado'}</p>
+              </div>
+              
+              <div>
+                <label className="block text-white mb-2">
+                  Mensaje Personalizado (Opcional)
+                </label>
+                <textarea
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                  className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 h-24 resize-none"
+                  placeholder="Escribe un mensaje personalizado para el cliente..."
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <button
+                  onClick={handleSendWhatsApp}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  📱 Enviar WhatsApp
+                </button>
+                <button
+                  onClick={() => {
+                    setIsWhatsAppModalOpen(false);
+                    setSelectedPurchase(null);
+                    setCustomMessage('');
                   }}
                   className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                 >
