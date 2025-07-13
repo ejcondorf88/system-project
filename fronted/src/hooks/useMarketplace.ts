@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import marketplaceAdapter from '@/adapters/marketplace.adapter';
 import type { Prize, PrizePurchase, PurchaseRequest } from '@/adapters/marketplace.adapter';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 interface UseMarketplaceReturn {
   prizes: Prize[];
@@ -26,6 +27,7 @@ export const useMarketplace = (): UseMarketplaceReturn => {
   const [allPurchases, setAllPurchases] = useState<PrizePurchase[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { refreshUser } = useAuth();
 
   const getPrizes = async () => {
     try {
@@ -67,6 +69,7 @@ export const useMarketplace = (): UseMarketplaceReturn => {
       
       // Actualizar las compras del usuario
       await getMyPurchases();
+      await refreshUser(); // Actualizar el usuario en el contexto
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al procesar la compra';
       setError(errorMessage);

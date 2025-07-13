@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 export const Store = () => {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout, user, refreshUser } = useAuth();
   const { prizes, loading, purchasePrize, getMyPurchases } = useMarketplace();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [purchasing, setPurchasing] = useState<number | null>(null);
@@ -63,6 +63,7 @@ export const Store = () => {
       
       // Actualizar las compras del usuario
       await getMyPurchases();
+      await refreshUser(); // Actualizar el usuario en el estado global
     } catch (error) {
       console.error('Error al comprar:', error);
     } finally {

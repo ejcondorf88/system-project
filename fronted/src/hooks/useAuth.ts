@@ -9,6 +9,7 @@ interface UseAuthReturn {
   login: (credentials: { username: string; password: string }) => Promise<void>;
   logout: () => void;
   register: (credentials: { username: string; email: string; phone?: string; password: string; confirmPassword: string }) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const useAuth = (): UseAuthReturn => {
@@ -126,12 +127,29 @@ export const useAuth = (): UseAuthReturn => {
     navigate('/login');
   };
 
+  const refreshUser = async () => {
+    try {
+      const currentUser = await authAdapter.getCurrentUser();
+      setUser(currentUser);
+      localStorage.setItem('user', JSON.stringify(currentUser));
+    } catch (error) {
+      console.error('Error al actualizar datos del usuario:', error);
+      // Si hay error, limpiar datos y redirigir al login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      setUser(null);
+      navigate('/login');
+    }
+  };
+
   return {
     isAuthenticated,
     user,
     loading,
     login,
     logout,
-    register
+    register,
+    refreshUser
   };
 }; 
