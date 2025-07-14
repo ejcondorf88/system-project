@@ -24,8 +24,8 @@ def get_dashboard_stats(
     try:
         # Estadísticas de usuarios
         total_users = db.query(models.User).count()
-        active_users = db.query(models.User).filter(models.User.estado == True).count()
-        inactive_users = db.query(models.User).filter(models.User.estado == False).count()
+        active_users = db.query(models.User).filter(models.User.status == 1).count()
+        inactive_users = db.query(models.User).filter(models.User.status == 0).count()
         
         # Estadísticas de membresías
         total_memberships = db.query(models.UserMembership).count()

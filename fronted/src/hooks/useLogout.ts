@@ -9,9 +9,10 @@ export const useLogout = () => {
     try {
       // Llamar al endpoint de logout del backend
       const token = localStorage.getItem('token');
+      console.log('[LOGOUT] Token actual:', token);
       if (token) {
         try {
-          await axios.post(
+          const res = await axios.post(
             process.env.NODE_ENV === 'production'
               ? 'https://tu-backend-app.onrender.com/api/auth/logout'
               : 'http://localhost:8080/api/auth/logout',
@@ -20,10 +21,13 @@ export const useLogout = () => {
               headers: { Authorization: `Bearer ${token}` }
             }
           );
+          console.log('[LOGOUT] Respuesta backend:', res.data);
         } catch (err) {
           // Si falla, igual seguimos con el logout local
-          console.warn('Error al llamar al logout backend:', err);
+          console.warn('[LOGOUT] Error al llamar al logout backend:', err);
         }
+      } else {
+        console.warn('[LOGOUT] No hay token en localStorage');
       }
       // Borrar todos los datos de autenticación del localStorage
       localStorage.removeItem('token');
@@ -43,7 +47,7 @@ export const useLogout = () => {
       // Redirigir al login
       navigate('/login', { replace: true });
     } catch (error) {
-      console.error('Error durante el logout:', error);
+      console.error('[LOGOUT] Error durante el logout:', error);
       toast.error('Error al cerrar sesión');
       // Aún así, intentar redirigir al login
       navigate('/login', { replace: true });

@@ -2,13 +2,13 @@ import { useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaSignOutAlt } from 'react-icons/fa';
 import { useChat } from '../hooks/useChat';
-import { useAuth } from '@/hooks/useAuth';
+import { useLogout } from '@/hooks/useLogout';
 
 export const Chat = () => {
   const { messages, input, setInput, sendMessage, isLoading, isLoadingHistory, clearHistory } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout } = useLogout();
   const location = useLocation();
   
   // Obtener información de la rutina seleccionada

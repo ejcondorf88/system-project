@@ -142,19 +142,16 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
         )
 
 @router.post("/logout")
-def logout(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """
-    Endpoint para cerrar sesión: actualiza el status del usuario a 0 (inactivo)
-    """
+def logout(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
-        user = db.query(User).filter(User.id == current_user.id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        user.status = 0
+        print(f"[LOGOUT] Usuario identificado: {current_user.username} (ID: {current_user.id})")
+        current_user.status = 0
         db.commit()
-        db.refresh(user)
-        return {"message": "Sesión cerrada y usuario marcado como inactivo"}
+        db.refresh(current_user)
+        print(f"[LOGOUT] Status actualizado a 0 para usuario {current_user.username}")
+        return {"message": "Sesión cerrada correctamente"}
     except Exception as e:
+        print(f"[LOGOUT][ERROR] {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al cerrar sesión: {str(e)}")
 
