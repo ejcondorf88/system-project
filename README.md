@@ -228,6 +228,165 @@ Aquí tienes una vista simplificada de la estructura de carpetas del proyecto:
     └── vite.config.ts
 ```
 
+## 🗄️ Diagrama Entidad-Relación de la Base de Datos
+
+```mermaid
+erDiagram
+  User {
+    Integer id PK
+    String username
+    String email
+    String password
+    String phone
+    String level
+    Integer points
+    Integer benefits
+    String achievements_json
+    DateTime creacion
+    Boolean estado
+    Boolean is_superuser
+    Boolean is_trainer
+    Integer status
+    Integer role_id FK
+    DateTime created_at
+    DateTime updated_at
+  }
+  Role {
+    Integer id PK
+    String name
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  Membership {
+    Integer id PK
+    String name
+    String description
+    Numeric price
+    Integer duration_days
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  UserMembership {
+    Integer id PK
+    Integer user_id FK
+    Integer membership_id FK
+    DateTime start_date
+    DateTime end_date
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  Routine {
+    Integer id PK
+    String name
+    String focus
+    String level
+    String description
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  UserRoutine {
+    Integer id PK
+    Integer user_id FK
+    Integer routine_id FK
+    DateTime assigned_at
+    DateTime completed_at
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  Point {
+    Integer id PK
+    Integer user_id FK
+    Integer amount
+    String reason
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  Achievement {
+    Integer id PK
+    String name
+    String description
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  UserAchievement {
+    Integer id PK
+    Integer user_id FK
+    Integer achievement_id FK
+    Integer status
+    DateTime obtained_at
+    DateTime created_at
+    DateTime updated_at
+  }
+  ChatMessage {
+    Integer id PK
+    Integer user_id FK
+    String message_type
+    String content
+    String session_id
+    Integer status
+    DateTime timestamp
+    DateTime created_at
+    DateTime updated_at
+  }
+  Prize {
+    Integer id PK
+    String name
+    String description
+    String image_url
+    Integer points_cost
+    Integer stock
+    String category
+    Integer status
+    DateTime created_at
+    DateTime updated_at
+  }
+  PrizePurchase {
+    Integer id PK
+    Integer user_id FK
+    Integer prize_id FK
+    Integer points_spent
+    DateTime purchase_date
+    String status
+    String shipping_address
+    String tracking_number
+    DateTime created_at
+    DateTime updated_at
+  }
+  AuditLog {
+    Integer id PK
+    String table_name
+    Integer record_id
+    String action
+    String field_name
+    String old_value
+    String new_value
+    Integer user_id FK
+    String ip_address
+    String user_agent
+    DateTime created_at
+  }
+  
+  User ||--o{ UserMembership : "memberships"
+  Membership ||--o{ UserMembership : "user_memberships"
+  User ||--o{ UserRoutine : "routines"
+  Routine ||--o{ UserRoutine : "user_routines"
+  User ||--o{ Point : "points_rel"
+  User ||--o{ UserAchievement : "achievements"
+  Achievement ||--o{ UserAchievement : "user_achievements"
+  User ||--o{ ChatMessage : "chat_messages"
+  User ||--o{ PrizePurchase : "prize_purchases"
+  Prize ||--o{ PrizePurchase : "purchases"
+  User ||--o{ AuditLog : "audit_logs"
+  Role ||--o{ User : "users"
+```
+
 ## 🔒 Seguridad
 
 ### Backend
