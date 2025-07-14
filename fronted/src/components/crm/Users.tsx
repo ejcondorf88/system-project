@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Users as UsersIcon, Search, Filter, Plus, Edit, Trash2, Award, Crown, UserPlus, RefreshCw, Mail, Phone, Calendar, MessageCircle } from 'lucide-react';
 import { useUsers, type User } from '../../hooks/useUsers';
 import { useWhatsApp } from '../../hooks/useWhatsApp';
+import { toast } from 'sonner';
 
 interface ModalProps {
   isOpen: boolean;
@@ -23,12 +24,14 @@ const AssignPointsModal = ({ isOpen, onClose, user, type }: ModalProps) => {
     try {
       setLoading(true);
       await assignPoints(user.id, parseInt(points), reason);
-      alert('Puntos asignados correctamente');
+      toast.success(`🎉 ¡Puntos asignados a ${user.username} correctamente!`, {
+        description: `Razón: ${reason} | Cantidad: ${points}`
+      });
       onClose();
       setPoints('');
       setReason('');
     } catch (error) {
-      alert('Error al asignar puntos');
+      toast.error('Error al asignar puntos');
     } finally {
       setLoading(false);
     }
@@ -109,11 +112,11 @@ const ChangeLevelModal = ({ isOpen, onClose, user, type }: ModalProps) => {
     try {
       setLoading(true);
       await changeUserLevel(user.id, newLevel);
-      alert('Nivel actualizado correctamente');
+      toast.success(`🥇 ¡Nivel de ${user.username} actualizado a ${newLevel}!`);
       onClose();
       setNewLevel('');
     } catch (error) {
-      alert('Error al cambiar nivel');
+      toast.error('Error al cambiar nivel');
     } finally {
       setLoading(false);
     }
@@ -179,7 +182,7 @@ const WhatsAppModal = ({ isOpen, onClose, user, type }: ModalProps) => {
 
   const handleSendWelcome = async () => {
     if (!user || !user.phone) {
-      alert('El usuario no tiene número de teléfono registrado');
+      toast.error('El usuario no tiene número de teléfono registrado');
       return;
     }
 
@@ -190,13 +193,13 @@ const WhatsAppModal = ({ isOpen, onClose, user, type }: ModalProps) => {
       const result = await sendWelcomeCRM(user.phone, user.username);
       
       if (result.success) {
-        alert('Mensaje de bienvenida enviado exitosamente');
+        toast.success(`✅ Mensaje de bienvenida enviado a ${user.username}`);
         onClose();
       } else {
-        alert('Error al enviar mensaje de bienvenida');
+        toast.error('Error al enviar mensaje de bienvenida');
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }
@@ -205,7 +208,7 @@ const WhatsAppModal = ({ isOpen, onClose, user, type }: ModalProps) => {
   const handleSendCustomMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !user.phone || !message.trim()) {
-      alert('Por favor completa todos los campos');
+      toast.error('Por favor completa todos los campos');
       return;
     }
 
@@ -216,14 +219,14 @@ const WhatsAppModal = ({ isOpen, onClose, user, type }: ModalProps) => {
       const result = await sendMessage(user.phone, message);
       
       if (result.success) {
-        alert('Mensaje enviado exitosamente');
+        toast.success(`📲 Mensaje enviado exitosamente a ${user.username}`);
         onClose();
         setMessage('');
       } else {
-        alert('Error al enviar mensaje');
+        toast.error('Error al enviar mensaje');
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      toast.error(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }

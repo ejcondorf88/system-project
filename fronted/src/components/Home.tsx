@@ -61,7 +61,11 @@ const Home: React.FC = () => {
           <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{ animationDelay: '4s' }}></div>
         </div>
       </div>
-      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-xl px-6 py-16 bg-black/40 rounded-3xl shadow-2xl border border-white/20 backdrop-blur-lg mt-16 mb-8">
+      {/* Logo arriba */}
+      <div className="relative z-20 flex flex-col items-center justify-center w-full max-w-xl mt-8">
+        <img src="/logo.png" alt="Logo MF-Lifting" className="w-24 h-24 mb-4 rounded-2xl shadow-lg border-4 border-white/20 bg-white/80 object-contain" />
+      </div>
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-xl px-6 py-16 bg-black/40 rounded-3xl shadow-2xl border border-white/20 backdrop-blur-lg mt-4 mb-8">
         <h1 className="text-6xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-yellow-300 to-orange-600 drop-shadow-lg mb-6 text-center tracking-tight select-none">
           MF-Lifting
         </h1>
