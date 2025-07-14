@@ -124,6 +124,26 @@ const userAdapter = {
       }
       throw error;
     }
+  },
+
+  async completeUserRoutine(userRoutineId: number): Promise<any> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await axios.put(`http://localhost:8080/api/trainer/user-routines/${userRoutineId}/complete`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.detail || 'Error al marcar rutina como completada');
+      }
+      throw error;
+    }
   }
 };
 

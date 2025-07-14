@@ -31,7 +31,7 @@ const routinesAdapter = {
       }
 
       // Obtener rutinas del backend
-      const response = await axios.get('http://localhost:8080/api/dashboard/routines', {
+      const response = await axios.get('http://localhost:8080/api/dashboard/routines/available', {
         headers: {
           Authorization: `Bearer ${token}`
         }

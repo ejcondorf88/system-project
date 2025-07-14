@@ -12,6 +12,11 @@ from sqlalchemy.orm import Session
 import json
 import asyncio
 from services.whatsapp_service import send_welcome_message
+from fastapi import Request
+from core.security import get_current_user
+from database.models import User
+from schemas.user import User as UserSchema
+
 router = APIRouter(tags=["auth"])
 
 @router.post("/login", response_model=UserResponse)
@@ -35,12 +40,16 @@ def login(credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depe
     print(f"   - ID: {user.id}")
     print(f"   - Username: {user.username}")
     print(f"   - Email: {user.email}")
-    
+
+    # --- ACTUALIZAR STATUS A 1 (ACTIVO) ---
+    user.status = 1
+    db.commit()
+    db.refresh(user)
+    # --------------------------------------
     print("3. Generando token de acceso")
     access_token = create_access_token(
         data={"sub": user.username}
     )
-    
     print("4. Login exitoso")
     print(f"{'='*50}\n")
     # --- Asegurar achievements como string ---
@@ -132,7 +141,24 @@ def register(user: UserCreate, response: Response, db: Session = Depends(get_db)
             detail=f"Error interno del servidor: {str(e)}"
         )
 
-@router.get("/me", response_model=User)
+@router.post("/logout")
+def logout(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Endpoint para cerrar sesión: actualiza el status del usuario a 0 (inactivo)
+    """
+    try:
+        user = db.query(User).filter(User.id == current_user.id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        user.status = 0
+        db.commit()
+        db.refresh(user)
+        return {"message": "Sesión cerrada y usuario marcado como inactivo"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al cerrar sesión: {str(e)}")
+
+@router.get("/me", response_model=UserSchema)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Obtener información del usuario actual"""
     # Asegurarse de que achievements sea string
@@ -142,4 +168,4 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
         user_dict['achievements'] = json.dumps(user_dict['achievements'])
     elif user_dict.get('achievements') is None:
         user_dict['achievements'] = "[]"
-    return User(**user_dict)
+    return UserSchema(**user_dict)

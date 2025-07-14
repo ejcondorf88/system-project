@@ -215,11 +215,11 @@ const marketplaceAdapter = {
       if (!token) {
         throw new Error('No hay token disponible');
       }
-
-      const response = await axios.put(`${API_URL}/purchases/${purchaseId}/status`, {
-        status,
-        tracking_number: trackingNumber
-      }, {
+      let url = `${API_URL}/purchases/${purchaseId}/status?status=${encodeURIComponent(status)}`;
+      if (trackingNumber) {
+        url += `&tracking_number=${encodeURIComponent(trackingNumber)}`;
+      }
+      const response = await axios.put(url, null, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -38,6 +38,8 @@ const AuditLogs: React.FC = () => {
   });
 
   useEffect(() => {
+    console.log('AuditLogs montado');
+    console.log('Filtros actuales:', filters);
     fetchAuditLogs();
     fetchAuditSummary();
   }, [filters]);
@@ -52,16 +54,24 @@ const AuditLogs: React.FC = () => {
       if (filters.user_id) params.append('user_id', filters.user_id);
       params.append('limit', filters.limit.toString());
       params.append('offset', filters.offset.toString());
+      const url = `http://localhost:8080/api/audit/logs?${params}`;
+      console.log('Haciendo fetch a:', url);
 
-      const response = await fetch(`/api/audit/logs?${params}`, {
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
+      console.log('Respuesta cruda fetchAuditLogs:', response);
+      const text = await response.text();
+      console.log('Texto recibido:', text);
 
       if (response.ok) {
-        const data = await response.json();
+        const data = JSON.parse(text);
         setLogs(data);
+        console.log('Logs recibidos:', data);
+      } else {
+        console.error('Error HTTP en fetchAuditLogs:', response.status, text);
       }
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -72,15 +82,22 @@ const AuditLogs: React.FC = () => {
 
   const fetchAuditSummary = async () => {
     try {
-      const response = await fetch('/api/audit/summary', {
+      const url = 'http://localhost:8080/api/audit/summary';
+      console.log('Haciendo fetch a:', url);
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-
+      console.log('Respuesta cruda fetchAuditSummary:', response);
+      const text = await response.text();
+      console.log('Texto recibido:', text);
       if (response.ok) {
-        const data = await response.json();
+        const data = JSON.parse(text);
         setSummary(data);
+        console.log('Resumen recibido:', data);
+      } else {
+        console.error('Error HTTP en fetchAuditSummary:', response.status, text);
       }
     } catch (error) {
       console.error('Error fetching audit summary:', error);

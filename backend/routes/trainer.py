@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import List
 from schemas.user import RoutineCreate, UserRoutineCreate
 from schemas.chat import ChatMessageResponse
+from services.audit_service import AuditService
 
 router = APIRouter(
     tags=["Trainer"]
@@ -66,6 +67,16 @@ def create_routine(
         description=routine.description
     )
     
+    # Auditoría
+    AuditService.log_create(
+        db=db,
+        table_name="routines",
+        record_id=new_routine.id,
+        user_id=current_user.id,
+        ip_address=None,
+        user_agent=None
+    )
+    
     return {
         "id": new_routine.id,
         "name": new_routine.name,
@@ -91,6 +102,14 @@ def update_routine(
     if not routine:
         raise HTTPException(status_code=404, detail="Rutina no encontrada")
     
+    # Auditoría: guardar valores antiguos
+    old_values = {
+        "name": routine.name,
+        "focus": routine.focus,
+        "level": routine.level,
+        "description": routine.description
+    }
+    
     routine.name = routine_update.name
     routine.focus = routine_update.focus
     routine.level = routine_update.level
@@ -98,6 +117,22 @@ def update_routine(
     
     db.commit()
     db.refresh(routine)
+    
+    # Auditoría: registrar cambios campo por campo
+    for key, old_value in old_values.items():
+        new_value = getattr(routine, key)
+        if old_value != new_value:
+            AuditService.log_update(
+                db=db,
+                table_name="routines",
+                record_id=routine.id,
+                field_name=key,
+                old_value=old_value,
+                new_value=new_value,
+                user_id=current_user.id,
+                ip_address=None,
+                user_agent=None
+            )
     
     return {
         "id": routine.id,
@@ -126,6 +161,16 @@ def delete_routine(
     # Soft delete - cambiar status a 0
     routine.status = 0
     db.commit()
+    
+    # Auditoría
+    AuditService.log_delete(
+        db=db,
+        table_name="routines",
+        record_id=routine_id,
+        user_id=current_user.id,
+        ip_address=None,
+        user_agent=None
+    )
     
     return {"message": "Rutina eliminada exitosamente"}
 
@@ -187,6 +232,16 @@ def assign_routine_to_user(
     db.add(new_user_routine)
     db.commit()
     db.refresh(new_user_routine)
+    
+    # Auditoría
+    AuditService.log_create(
+        db=db,
+        table_name="user_routines",
+        record_id=new_user_routine.id,
+        user_id=current_user.id,
+        ip_address=None,
+        user_agent=None
+    )
     
     return {
         "id": new_user_routine.id,
@@ -334,6 +389,16 @@ def remove_user_routine(
     
     db.delete(user_routine)
     db.commit()
+    
+    # Auditoría
+    AuditService.log_delete(
+        db=db,
+        table_name="user_routines",
+        record_id=user_routine_id,
+        user_id=current_user.id,
+        ip_address=None,
+        user_agent=None
+    )
     
     return {"message": "Rutina removida del usuario exitosamente"}
 

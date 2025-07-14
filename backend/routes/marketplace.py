@@ -6,6 +6,7 @@ from schemas.user import Prize, PrizeCreate, PrizePurchase, PrizePurchaseCreate,
 from core.security import get_current_user
 from typing import List
 import logging
+from services.audit_service import AuditService
 
 router = APIRouter(prefix="/api/marketplace", tags=["marketplace"])
 
@@ -58,9 +59,17 @@ def create_prize(prize: PrizeCreate, db: Session = Depends(get_db), current_user
     try:
         if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
-        
         prize_repo = PrizeRepository(db)
         new_prize = prize_repo.create_prize(prize)
+        # Auditoría
+        AuditService.log_create(
+            db=db,
+            table_name="prizes",
+            record_id=new_prize.id,
+            user_id=current_user.id,
+            ip_address=None,
+            user_agent=None
+        )
         logger.info(f"Premio creado: {new_prize.name}")
         return new_prize
     except HTTPException:
@@ -75,12 +84,28 @@ def update_prize(prize_id: int, prize_data: dict, db: Session = Depends(get_db),
     try:
         if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
-        
         prize_repo = PrizeRepository(db)
+        # Obtener valores antiguos para auditoría
+        old_prize = prize_repo.get_prize_by_id(prize_id)
         updated_prize = prize_repo.update_prize(prize_id, prize_data)
         if not updated_prize:
             raise HTTPException(status_code=404, detail="Premio no encontrado")
-        
+        # Auditoría campo por campo
+        for key, new_value in prize_data.items():
+            if hasattr(old_prize, key):
+                old_value = getattr(old_prize, key)
+                if old_value != new_value:
+                    AuditService.log_update(
+                        db=db,
+                        table_name="prizes",
+                        record_id=prize_id,
+                        field_name=key,
+                        old_value=old_value,
+                        new_value=new_value,
+                        user_id=current_user.id,
+                        ip_address=None,
+                        user_agent=None
+                    )
         logger.info(f"Premio actualizado: {updated_prize.name}")
         return updated_prize
     except HTTPException:
@@ -95,12 +120,19 @@ def delete_prize(prize_id: int, db: Session = Depends(get_db), current_user = De
     try:
         if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
-        
         prize_repo = PrizeRepository(db)
         success = prize_repo.delete_prize(prize_id)
         if not success:
             raise HTTPException(status_code=404, detail="Premio no encontrado")
-        
+        # Auditoría
+        AuditService.log_delete(
+            db=db,
+            table_name="prizes",
+            record_id=prize_id,
+            user_id=current_user.id,
+            ip_address=None,
+            user_agent=None
+        )
         logger.info(f"Premio eliminado: {prize_id}")
         return {"message": "Premio eliminado exitosamente"}
     except HTTPException:
@@ -116,14 +148,21 @@ def purchase_prize(purchase_data: PrizePurchaseCreate, db: Session = Depends(get
         user_id = current_user.id
         if not user_id:
             raise HTTPException(status_code=401, detail="Usuario no autenticado")
-        
         prize_repo = PrizeRepository(db)
         purchase = prize_repo.purchase_prize(
             user_id=user_id,
             prize_id=purchase_data.prize_id,
             shipping_address=purchase_data.shipping_address
         )
-        
+        # Auditoría
+        AuditService.log_create(
+            db=db,
+            table_name="prize_purchases",
+            record_id=purchase.id,
+            user_id=user_id,
+            ip_address=None,
+            user_agent=None
+        )
         logger.info(f"Compra realizada: Usuario {user_id} compró premio {purchase_data.prize_id}")
         return purchase
     except ValueError as e:
@@ -176,12 +215,22 @@ def update_purchase_status(purchase_id: int, status: str, tracking_number: str =
     try:
         if not current_user.is_superuser:
             raise HTTPException(status_code=403, detail="Acceso denegado")
-        
         prize_repo = PrizeRepository(db)
         purchase = prize_repo.update_purchase_status(purchase_id, status, tracking_number)
         if not purchase:
             raise HTTPException(status_code=404, detail="Compra no encontrada")
-        
+        # Auditoría
+        AuditService.log_update(
+            db=db,
+            table_name="prize_purchases",
+            record_id=purchase_id,
+            field_name="status",
+            old_value=None,  # Si puedes obtener el valor anterior, cámbialo aquí
+            new_value=status,
+            user_id=current_user.id,
+            ip_address=None,
+            user_agent=None
+        )
         logger.info(f"Estado de compra {purchase_id} actualizado a: {status}")
         return {"message": "Estado de compra actualizado exitosamente", "purchase": purchase}
     except HTTPException:

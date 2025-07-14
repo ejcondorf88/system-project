@@ -134,25 +134,69 @@ def update_me(
 
 # --- Roles ---
 @router.post("/roles", response_model=Role)
-def create_role(role: RoleCreate, db: Session = Depends(get_db)):
-    return user_repository.crear_rol(db, name=role.name)
+def create_role(role: RoleCreate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    new_role = user_repository.crear_rol(db, name=role.name)
+    ip_address = AuditMiddleware.get_client_ip(request)
+    user_agent = AuditMiddleware.get_user_agent(request)
+    AuditService.log_create(
+        db=db,
+        table_name="roles",
+        record_id=new_role.id,
+        user_id=current_user.id if current_user else None,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    return new_role
 
 # --- Membresías ---
 @router.post("/memberships", response_model=Membership)
-def create_membership(membership: MembershipCreate, db: Session = Depends(get_db)):
-    return user_repository.crear_membresia(db, name=membership.name, description=membership.description, price=membership.price, duration_days=membership.duration_days)
+def create_membership(membership: MembershipCreate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    new_membership = user_repository.crear_membresia(db, name=membership.name, description=membership.description, price=membership.price, duration_days=membership.duration_days)
+    ip_address = AuditMiddleware.get_client_ip(request)
+    user_agent = AuditMiddleware.get_user_agent(request)
+    AuditService.log_create(
+        db=db,
+        table_name="memberships",
+        record_id=new_membership.id,
+        user_id=current_user.id if current_user else None,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    return new_membership
 
 # --- Rutinas ---
 @router.post("/routines", response_model=Routine)
-def create_routine(routine: RoutineCreate, db: Session = Depends(get_db)):
-    return user_repository.crear_rutina(db, name=routine.name, focus=routine.focus, level=routine.level, description=routine.description)
+def create_routine(routine: RoutineCreate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    new_routine = user_repository.crear_rutina(db, name=routine.name, focus=routine.focus, level=routine.level, description=routine.description)
+    ip_address = AuditMiddleware.get_client_ip(request)
+    user_agent = AuditMiddleware.get_user_agent(request)
+    AuditService.log_create(
+        db=db,
+        table_name="routines",
+        record_id=new_routine.id,
+        user_id=current_user.id if current_user else None,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    return new_routine
 
 # --- Puntos ---
 @router.post("/points", response_model=Point)
-def create_point(point: PointCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_point(point: PointCreate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Solo el superusuario puede asignar puntos.")
-    return user_repository.crear_punto(db, user_id=point.user_id, amount=point.amount, reason=point.reason)
+    new_point = user_repository.crear_punto(db, user_id=point.user_id, amount=point.amount, reason=point.reason)
+    ip_address = AuditMiddleware.get_client_ip(request)
+    user_agent = AuditMiddleware.get_user_agent(request)
+    AuditService.log_create(
+        db=db,
+        table_name="points",
+        record_id=new_point.id,
+        user_id=current_user.id if current_user else None,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    return new_point
 
 class AssignPointsRequest(BaseModel):
     user_id: int
@@ -301,5 +345,37 @@ def get_my_routines(
         raise HTTPException(status_code=500, detail=f"Error al obtener rutinas: {str(e)}")
 
 @router.post("/achievements", response_model=Achievement)
-def create_achievement(achievement: AchievementCreate, db: Session = Depends(get_db)):
-    return user_repository.crear_logro(db, name=achievement.name, description=achievement.description)
+def create_achievement(achievement: AchievementCreate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    new_achievement = user_repository.crear_logro(db, name=achievement.name, description=achievement.description)
+    ip_address = AuditMiddleware.get_client_ip(request)
+    user_agent = AuditMiddleware.get_user_agent(request)
+    AuditService.log_create(
+        db=db,
+        table_name="achievements",
+        record_id=new_achievement.id,
+        user_id=current_user.id if current_user else None,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    return new_achievement
+
+class ActiveUserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    level: str
+    status: int
+
+@router.get("/active", response_model=List[ActiveUserResponse])
+def get_active_users(db: Session = Depends(get_db)):
+    """Devuelve la lista de usuarios activos (status=1)"""
+    users = db.query(models.User).filter(models.User.status == 1).all()
+    return [
+        ActiveUserResponse(
+            id=u.id,
+            username=u.username,
+            email=u.email,
+            level=u.level,
+            status=u.status
+        ) for u in users
+    ]

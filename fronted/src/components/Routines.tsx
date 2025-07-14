@@ -16,6 +16,7 @@ import {
   DialogClose,
 } from './ui/dialog';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 const levelColors: Record<string, string> = {
   Gratis: 'bg-green-500/20 text-green-300',
@@ -48,6 +49,20 @@ export const Routines = () => {
 
     loadMyRoutines();
   }, []);
+
+  // Nueva función para marcar rutina como completada
+  const marcarComoCompletada = async (userRoutineId: number) => {
+    try {
+      await userAdapter.completeUserRoutine(userRoutineId);
+      toast.success('¡Rutina marcada como completada!');
+      // Refrescar rutinas asignadas
+      const data = await userAdapter.getMyRoutines();
+      setMyRoutines(data);
+    } catch (error) {
+      toast.error('Error al marcar rutina como completada');
+      console.error(error);
+    }
+  };
 
   const getLevelColor = (level: string) => {
     const levelMap: Record<string, string> = {
@@ -212,6 +227,14 @@ export const Routines = () => {
                   >
                     {userRoutine.completed_at ? 'Ver Detalles' : 'Comenzar Rutina'}
                   </button>
+                  {!userRoutine.completed_at && (
+                    <button
+                      onClick={() => marcarComoCompletada(userRoutine.id)}
+                      className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition-colors font-semibold text-sm mt-2"
+                    >
+                      Marcar como completada
+                    </button>
+                  )}
                 </motion.div>
               ))
             )}

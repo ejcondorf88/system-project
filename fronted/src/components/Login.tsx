@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import axios from "axios";
 
 export default function EnhancedGymLogin() {
   const [formData, setFormData] = useState({
@@ -9,6 +10,24 @@ export default function EnhancedGymLogin() {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading } = useAuth();
+  const [activeCount, setActiveCount] = useState<number | null>(null);
+  const MAX_CAPACITY = 50;
+
+  useEffect(() => {
+    // Obtener usuarios activos al cargar la página
+    const fetchActiveUsers = async () => {
+      try {
+        const url = process.env.NODE_ENV === 'production'
+          ? 'https://tu-backend-app.onrender.com/api/users/active'
+          : 'http://localhost:8080/api/users/active';
+        const response = await axios.get(url);
+        setActiveCount(Array.isArray(response.data) ? response.data.length : 0);
+      } catch (err) {
+        setActiveCount(null);
+      }
+    };
+    fetchActiveUsers();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -79,6 +98,15 @@ export default function EnhancedGymLogin() {
 
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-black/20 bg-[linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+
+      {/* Contador de usuarios activos */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20">
+        <div className="inline-flex items-center px-5 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-orange-500/20 border border-green-500/30 text-white text-sm font-semibold backdrop-blur-sm shadow-lg">
+          {activeCount !== null
+            ? `Actualmente hay ${activeCount}/${MAX_CAPACITY} usuarios activos`
+            : 'Cargando usuarios activos...'}
+        </div>
+      </div>
 
       <div className="relative z-10 max-w-md w-full">
         {/* Welcome back banner */}

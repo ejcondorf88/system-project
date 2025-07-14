@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import CRMLayout from '../components/crm/CRMLayout';
 import Dashboard from '../components/crm/Dashboard';
 import Users from '../components/crm/Users';

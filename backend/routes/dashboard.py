@@ -6,6 +6,7 @@ from database import models
 from core.security import get_current_user
 from database.models import User
 from datetime import datetime, timedelta
+from services.audit_service import AuditService
 
 router = APIRouter(
     tags=["Dashboard"]
@@ -111,7 +112,6 @@ def create_membership(
     """Crear una nueva membresía"""
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Solo el superusuario puede crear membresías.")
-    
     try:
         new_membership = models.Membership(
             name=membership_data.get("name"),
@@ -122,6 +122,15 @@ def create_membership(
         db.add(new_membership)
         db.commit()
         db.refresh(new_membership)
+        # Auditoría
+        AuditService.log_create(
+            db=db,
+            table_name="memberships",
+            record_id=new_membership.id,
+            user_id=current_user.id,
+            ip_address=None,
+            user_agent=None
+        )
         return new_membership
     except Exception as e:
         db.rollback()
@@ -137,18 +146,32 @@ def update_membership(
     """Actualizar una membresía"""
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Solo el superusuario puede actualizar membresías.")
-    
     membership = db.query(models.Membership).filter(models.Membership.id == membership_id).first()
     if not membership:
         raise HTTPException(status_code=404, detail="Membresía no encontrada")
-    
     try:
+        # Auditoría: guardar valores antiguos
+        old_values = {k: getattr(membership, k) for k in membership_data.keys() if hasattr(membership, k)}
         for key, value in membership_data.items():
             if hasattr(membership, key):
                 setattr(membership, key, value)
-        
         db.commit()
         db.refresh(membership)
+        # Auditoría: registrar cambios campo por campo
+        for key, old_value in old_values.items():
+            new_value = getattr(membership, key)
+            if old_value != new_value:
+                AuditService.log_update(
+                    db=db,
+                    table_name="memberships",
+                    record_id=membership.id,
+                    field_name=key,
+                    old_value=old_value,
+                    new_value=new_value,
+                    user_id=current_user.id,
+                    ip_address=None,
+                    user_agent=None
+                )
         return membership
     except Exception as e:
         db.rollback()
@@ -163,14 +186,21 @@ def delete_membership(
     """Eliminar una membresía"""
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Solo el superusuario puede eliminar membresías.")
-    
     membership = db.query(models.Membership).filter(models.Membership.id == membership_id).first()
     if not membership:
         raise HTTPException(status_code=404, detail="Membresía no encontrada")
-    
     try:
         db.delete(membership)
         db.commit()
+        # Auditoría
+        AuditService.log_delete(
+            db=db,
+            table_name="memberships",
+            record_id=membership_id,
+            user_id=current_user.id,
+            ip_address=None,
+            user_agent=None
+        )
         return {"message": "Membresía eliminada exitosamente"}
     except Exception as e:
         db.rollback()
@@ -259,4 +289,25 @@ def get_user_routines(
                 }
             })
     
+    return result 
+
+@router.get("/routines/available")
+def get_available_routines(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Obtener todas las rutinas activas (disponibles para cualquier usuario autenticado)"""
+    routines = db.query(models.Routine).filter(models.Routine.status == 1).all()
+    result = []
+    for routine in routines:
+        result.append({
+            "id": routine.id,
+            "name": routine.name,
+            "focus": routine.focus,
+            "level": routine.level,
+            "description": routine.description,
+            "status": routine.status,
+            "created_at": routine.created_at.isoformat() if routine.created_at else None,
+            "updated_at": routine.updated_at.isoformat() if routine.updated_at else None
+        })
     return result 

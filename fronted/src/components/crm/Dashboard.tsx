@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import axios from 'axios';
 
 interface DashboardStats {
@@ -23,9 +24,14 @@ interface DashboardStats {
   }>;
 }
 
+interface DashboardContext {
+  setUserStats: (stats: { totalUsers: number; activeUsers: number }) => void;
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const outletContext = useOutletContext<DashboardContext>();
 
   useEffect(() => {
     fetchDashboardStats();
@@ -41,6 +47,13 @@ export default function Dashboard() {
       });
       
       setStats(response.data);
+      // Actualizar stats globales para Sidebar
+      if (outletContext?.setUserStats) {
+        outletContext.setUserStats({
+          totalUsers: response.data.totalUsers,
+          activeUsers: response.data.activeUsers
+        });
+      }
     } catch (error) {
       console.error('Error al cargar estadísticas:', error);
       // Datos de ejemplo para demostración
@@ -79,6 +92,12 @@ export default function Dashboard() {
           }
         ]
       });
+      if (outletContext?.setUserStats) {
+        outletContext.setUserStats({
+          totalUsers: 150,
+          activeUsers: 120
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -112,19 +131,23 @@ export default function Dashboard() {
 
       {/* Estadísticas Principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Usuarios */}
         <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total Usuarios</p>
-              <p className="text-3xl font-bold text-white">{stats.totalUsers}</p>
+              <p className="text-3xl font-bold text-orange-400">{stats.totalUsers}</p>
             </div>
             <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
               <span className="text-blue-400 text-xl">👥</span>
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-green-400 text-sm">
+          <div className="mt-4 flex gap-3">
+            <span className="text-green-400 text-sm font-semibold">
               {stats.activeUsers} activos
+            </span>
+            <span className="text-red-400 text-sm font-semibold">
+              {stats.totalUsers - stats.activeUsers} inactivos
             </span>
           </div>
         </div>

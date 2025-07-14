@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import UserInfo from '@/components/UserInfo';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { 
   LayoutDashboard, 
   Users, 
@@ -52,18 +54,18 @@ const modules = [
     icon: ShoppingCart,
     description: 'Gestión de compras'
   },
-  { 
-    name: 'Clientes', 
-    path: '/crm/clients', 
-    icon: UserCheck,
-    description: 'Gestión de clientes'
-  },
-  { 
-    name: 'Reportes', 
-    path: '/crm/reports', 
-    icon: BarChart3,
-    description: 'Analytics y reportes'
-  },
+  // { 
+  //   name: 'Clientes', 
+  //   path: '/crm/clients', 
+  //   icon: UserCheck,
+  //   description: 'Gestión de clientes'
+  // },
+  // { 
+  //   name: 'Reportes', 
+  //   path: '/crm/reports', 
+  //   icon: BarChart3,
+  //   description: 'Analytics y reportes'
+  // },
   { 
     name: 'Auditoría', 
     path: '/crm/audit', 
@@ -73,6 +75,38 @@ const modules = [
 ];
 
 export function Sidebar() {
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [inactiveUsers, setInactiveUsers] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        // Obtener stats generales
+        const statsRes = await axios.get('http://localhost:8080/api/dashboard/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        setTotalUsers(statsRes.data.totalUsers);
+        setActiveUsers(statsRes.data.activeUsers);
+
+        // Obtener usuarios y contar inactivos (status 0)
+        const usersRes = await axios.get('http://localhost:8080/api/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const inactivos = Array.isArray(usersRes.data)
+          ? usersRes.data.filter(u => u.status === 0 || u.estado === 0).length
+          : 0;
+        setInactiveUsers(inactivos);
+      } catch (error) {
+        setTotalUsers(0);
+        setActiveUsers(0);
+        setInactiveUsers(0);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <aside className="w-72 min-h-screen bg-gradient-to-b from-slate-900/95 to-slate-800/95 backdrop-blur-xl border-r border-white/10 flex flex-col shadow-2xl">
       {/* Header */}
@@ -129,18 +163,20 @@ export function Sidebar() {
       </nav>
 
       {/* Quick Stats */}
-      <div className="p-4 border-t border-white/10">
-        <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-xl p-4 border border-white/10">
-          <h3 className="text-sm font-semibold text-white mb-3">Resumen Rápido</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="text-center">
-              <div className="text-lg font-bold text-orange-400">1,234</div>
-              <div className="text-xs text-slate-400">Usuarios</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-green-400">89</div>
-              <div className="text-xs text-slate-400">Activos</div>
-            </div>
+      <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-xl p-4 border border-white/10">
+        <h3 className="text-sm font-semibold text-white mb-3">Resumen Rápido</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center">
+            <div className="text-lg font-bold text-orange-400">{totalUsers}</div>
+            <div className="text-xs text-slate-400">Usuarios</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-green-400">{activeUsers}</div>
+            <div className="text-xs text-slate-400">Activos</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-red-400">{inactiveUsers}</div>
+            <div className="text-xs text-slate-400">Inactivos</div>
           </div>
         </div>
       </div>
