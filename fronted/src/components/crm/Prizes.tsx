@@ -264,11 +264,17 @@ export function Prizes() {
                 <label className="block text-white mb-2">Categoría</label>
                 <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
                   <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                    <SelectValue />
+                    {(() => {
+                      if (formData.category) {
+                        const selected = categories.find((c) => c === formData.category);
+                        return selected ? selected.charAt(0).toUpperCase() + selected.slice(1) : null;
+                      }
+                      return <span className="text-gray-400">Selecciona una categoría</span>;
+                    })()}
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gray-700 text-white">
                     {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
+                      <SelectItem key={category} value={category} className="text-white">
                         {category.charAt(0).toUpperCase() + category.slice(1)}
                       </SelectItem>
                     ))}

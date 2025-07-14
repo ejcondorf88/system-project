@@ -5,6 +5,7 @@ import axios from 'axios';
 interface DashboardStats {
   totalUsers: number;
   activeUsers: number;
+  inactiveUsers: number;
   totalMemberships: number;
   activeMemberships: number;
   totalRoutines: number;
@@ -60,6 +61,7 @@ export default function Dashboard() {
       setStats({
         totalUsers: 150,
         activeUsers: 120,
+        inactiveUsers: 30,
         totalMemberships: 45,
         activeMemberships: 38,
         totalRoutines: 25,
@@ -164,7 +166,7 @@ export default function Dashboard() {
               {stats.activeUsers} activos
             </span>
             <span className="text-red-400 text-sm font-semibold">
-              {stats.totalUsers - stats.activeUsers} inactivos
+              {stats.inactiveUsers} inactivos
             </span>
           </div>
         </div>
@@ -215,7 +217,7 @@ export default function Dashboard() {
           </div>
           <div className="mt-4">
             <span className="text-green-400 text-sm">
-              Promedio: {stats.averagePointsPerUser}
+              Promedio: {stats.averagePointsPerUser} (sobre todos los usuarios)
             </span>
           </div>
         </div>
