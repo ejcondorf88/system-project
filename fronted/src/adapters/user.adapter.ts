@@ -146,7 +146,7 @@ const userAdapter = {
     }
   },
 
-  async generateRoutineWithAI({ name, level, focus, tipo = 'full body' }: { name: string; level: string; focus: string; tipo?: string }): Promise<any> {
+  async generateRoutineWithAI({ name, level, focus, description = '', tipo = 'full body' }: { name: string; level: string; focus: string; description?: string; tipo?: string }): Promise<any> {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -154,7 +154,7 @@ const userAdapter = {
       }
       const response = await axios.post(
         `${API_URL}/trainer/routines/generate`,
-        { name, level, focus, tipo },
+        { name, level, focus, description, tipo },
         {
           headers: { Authorization: `Bearer ${token}` }
         }

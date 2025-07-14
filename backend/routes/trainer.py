@@ -667,6 +667,7 @@ def generate_routine_with_openai(
     name: str = Body(...),
     level: str = Body(...),
     focus: str = Body(...),
+    description: str = Body(""),
     tipo: str = Body("full body"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -677,7 +678,7 @@ def generate_routine_with_openai(
         raise HTTPException(status_code=500, detail="OpenAI API Key no configurada")
     llm = ChatOpenAI(model_name='gpt-3.5-turbo', temperature=0)
     prompt = f"""
-Eres un entrenador personal experto. Genera una tabla de ejercicios para una rutina {tipo} nivel {level} enfocada en {focus}. Devuelve la respuesta en formato JSON con el siguiente formato:
+Eres un entrenador personal experto. Genera una tabla de ejercicios para una rutina llamada '{name}' (descripción: {description}), nivel {level}, enfocada en {focus}. Devuelve la respuesta en formato JSON con el siguiente formato:
 [
   {{
     "name": "Nombre del ejercicio",

@@ -95,6 +95,7 @@ export const Routines = () => {
           name: userRoutine.routine.name,
           level: userRoutine.routine.level,
           focus: userRoutine.routine.focus,
+          description: userRoutine.routine.description || '',
         });
         setAiExercises(res.exercises);
       } catch (err: any) {
