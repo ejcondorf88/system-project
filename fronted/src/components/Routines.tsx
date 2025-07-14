@@ -24,6 +24,21 @@ const levelColors: Record<string, string> = {
   Oro: 'bg-yellow-400/20 text-yellow-300',
 };
 
+// Define el tipo de ejercicio para rutinas
+type RoutineExercise = {
+  name: string;
+  series: number | string;
+  reps: number | string;
+  rir: string;
+  tempo: string;
+  rest: string;
+};
+
+// Helper para saber si una rutina tiene ejercicios
+function hasExercises(routine: any): routine is { exercises: RoutineExercise[] } {
+  return routine && Array.isArray(routine.exercises);
+}
+
 export const Routines = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -32,6 +47,10 @@ export const Routines = () => {
   const [myRoutines, setMyRoutines] = useState<UserRoutine[]>([]);
   const [loadingMyRoutines, setLoadingMyRoutines] = useState(false);
   const [activeTab, setActiveTab] = useState<'available' | 'assigned'>('assigned');
+  const [showRoutineModal, setShowRoutineModal] = useState(false);
+  const [modalRoutine, setModalRoutine] = useState<UserRoutine | null>(null);
+  const [aiExercises, setAiExercises] = useState<RoutineExercise[] | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
 
   // Cargar rutinas asignadas
   useEffect(() => {
@@ -61,6 +80,28 @@ export const Routines = () => {
     } catch (error) {
       toast.error('Error al marcar rutina como completada');
       console.error(error);
+    }
+  };
+
+  const handleStartRoutine = async (userRoutine: UserRoutine) => {
+    setModalRoutine(userRoutine);
+    setAiExercises(null);
+    setShowRoutineModal(true);
+    // Si la rutina no tiene ejercicios, genera con IA
+    if (!hasExercises(userRoutine.routine)) {
+      setLoadingAI(true);
+      try {
+        const res = await userAdapter.generateRoutineWithAI({
+          name: userRoutine.routine.name,
+          level: userRoutine.routine.level,
+          focus: userRoutine.routine.focus,
+        });
+        setAiExercises(res.exercises);
+      } catch (err: any) {
+        toast.error(err.message || 'Error generando rutina con IA');
+      } finally {
+        setLoadingAI(false);
+      }
     }
   };
 
@@ -216,13 +257,8 @@ export const Routines = () => {
                     )}
                   </div>
 
-                  <button 
-                    onClick={() => navigate('/chat', { 
-                      state: { 
-                        selectedRoutine: userRoutine.routine,
-                        routineStarted: true 
-                      } 
-                    })}
+                  <button
+                    onClick={() => handleStartRoutine(userRoutine)}
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg transition-colors font-semibold text-sm"
                   >
                     {userRoutine.completed_at ? 'Ver Detalles' : 'Comenzar Rutina'}
@@ -338,6 +374,79 @@ export const Routines = () => {
               <button className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">Cerrar</button>
             </DialogClose>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Modal de rutina tipo Full Body */}
+      <Dialog open={showRoutineModal} onOpenChange={open => { setShowRoutineModal(open); if (!open) setModalRoutine(null); }}>
+        <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-900 via-gray-900 to-black">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-orange-400 mb-2">
+              {modalRoutine?.routine.name || 'Rutina'}
+            </DialogTitle>
+            <DialogDescription>
+              <div className="mb-4 text-white">
+                <span className="font-semibold">Nivel:</span> {modalRoutine?.routine.level} &nbsp;|&nbsp;
+                <span className="font-semibold">Enfoque:</span> {modalRoutine?.routine.focus}
+              </div>
+              {/* Tabla de ejercicios */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-xs border border-white/20 rounded-lg">
+                  <thead>
+                    <tr className="bg-orange-500/80 text-white">
+                      <th className="px-2 py-1">Ejercicio</th>
+                      <th className="px-2 py-1">Series</th>
+                      <th className="px-2 py-1">Repeticiones</th>
+                      <th className="px-2 py-1">RIR</th>
+                      <th className="px-2 py-1">Ritmo</th>
+                      <th className="px-2 py-1">Descanso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loadingAI && (
+                      <tr><td colSpan={6} className="text-center py-4 text-orange-300">Generando rutina con IA...</td></tr>
+                    )}
+                    {aiExercises && aiExercises.map((ex: RoutineExercise, idx: number) => (
+                      <tr key={idx} className="bg-white/10 text-white">
+                        <td className="px-2 py-1">{ex.name}</td>
+                        <td className="px-2 py-1 text-center">{ex.series}</td>
+                        <td className="px-2 py-1 text-center">{ex.reps}</td>
+                        <td className="px-2 py-1 text-center">{ex.rir}</td>
+                        <td className="px-2 py-1 text-center">{ex.tempo}</td>
+                        <td className="px-2 py-1 text-center">{ex.rest}</td>
+                      </tr>
+                    ))}
+                    {modalRoutine && hasExercises(modalRoutine.routine) &&
+                      modalRoutine.routine.exercises.map((ex: RoutineExercise, idx: number) => (
+                        <tr key={idx} className="bg-white/10 text-white">
+                          <td className="px-2 py-1">{ex.name}</td>
+                          <td className="px-2 py-1 text-center">{ex.series}</td>
+                          <td className="px-2 py-1 text-center">{ex.reps}</td>
+                          <td className="px-2 py-1 text-center">{ex.rir}</td>
+                          <td className="px-2 py-1 text-center">{ex.tempo}</td>
+                          <td className="px-2 py-1 text-center">{ex.rest}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex gap-4 mt-6">
+                <button
+                  onClick={() => setShowRoutineModal(false)}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Cerrar
+                </button>
+                {modalRoutine && !modalRoutine.completed_at && (
+                  <button
+                    onClick={() => { marcarComoCompletada(modalRoutine.id); setShowRoutineModal(false); }}
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Marcar como completada
+                  </button>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
         </DialogContent>
       </Dialog>
       {/* Barra de navegación inferior fija */}

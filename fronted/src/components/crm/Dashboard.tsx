@@ -103,6 +103,23 @@ export default function Dashboard() {
     }
   };
 
+  // Actividad reciente (auditoría)
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchAudit = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:8080/api/audit/logs?limit=10', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRecentActivity(res.data);
+      } catch {
+        setRecentActivity([]);
+      }
+    };
+    fetchAudit();
+  }, []);
+
   if (loading) {
     return (
       <div className="bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8 max-w-6xl mx-auto mt-10">
@@ -248,21 +265,34 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Actividad Reciente */}
+        {/* Actividad Reciente (auditoría) */}
         <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
           <h3 className="text-xl font-bold text-white mb-4">Actividad Reciente</h3>
           <div className="space-y-3">
-            {stats.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-white text-sm">{activity.description}</p>
-                  <p className="text-gray-400 text-xs">
-                    {new Date(activity.timestamp).toLocaleString()}
-                  </p>
+            {recentActivity.length === 0 && (
+              <div className="text-gray-400 text-center">No hay actividad reciente</div>
+            )}
+            {recentActivity.map((log) => {
+              let desc = '';
+              if (log.table_name === 'users' && log.action === 'CREATE') desc = `Nuevo usuario registrado (ID ${log.record_id})`;
+              else if (log.table_name === 'users' && log.action === 'UPDATE' && log.field_name === 'status' && log.new_value === '1') desc = `Usuario logueado (ID ${log.user_id})`;
+              else if (log.table_name === 'users' && log.action === 'UPDATE' && log.field_name === 'status' && log.new_value === '0') desc = `Usuario cerró sesión (ID ${log.user_id})`;
+              else if (log.table_name === 'prize_purchases' && log.action === 'CREATE') desc = `Pedido enviado (ID ${log.record_id})`;
+              else if (log.table_name === 'prize_purchases' && log.action === 'UPDATE') desc = `Actualización de pedido (ID ${log.record_id})`;
+              else if (log.table_name === 'audit_logs') desc = `Auditoría: ${log.action}`;
+              else desc = `${log.action} en ${log.table_name} (ID ${log.record_id})`;
+              return (
+                <div key={log.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                  <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                  <div className="flex-1">
+                    <p className="text-white text-sm">{desc}</p>
+                    <p className="text-gray-400 text-xs">
+                      {new Date(log.created_at).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

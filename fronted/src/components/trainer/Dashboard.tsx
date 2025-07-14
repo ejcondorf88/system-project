@@ -1,7 +1,34 @@
 import { useTrainer } from '@/hooks/useTrainer';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 export default function TrainerDashboard() {
   const { stats, loading } = useTrainer();
+
+  // Resumen rápido real
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [inactiveUsers, setInactiveUsers] = useState(0);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:8080/api/users', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const users = Array.isArray(res.data) ? res.data : [];
+        setTotalUsers(users.length);
+        setActiveUsers(users.filter(u => u.status === 1 || u.estado === 1).length);
+        setInactiveUsers(users.filter(u => u.status === 0 || u.estado === 0).length);
+      } catch {
+        setTotalUsers(0);
+        setActiveUsers(0);
+        setInactiveUsers(0);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   if (loading) {
     return (
@@ -230,19 +257,43 @@ export default function TrainerDashboard() {
         </div>
       </div>
 
-      {/* Acciones Rápidas */}
-      <div className="bg-white/10 rounded-2xl p-6 border border-white/20">
-        <h3 className="text-xl font-bold text-white mb-4">Acciones Rápidas</h3>
+      {/* Acciones rápidas comentadas */}
+      {/*
+      <div className="bg-white/10 rounded-2xl p-6 border border-white/20 mb-6">
+        <h2 className="text-xl font-bold text-white mb-4">Acciones Rápidas</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors">
-            Crear Nueva Rutina
+          <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <Target size={16} />
+            Asignar Rutina
           </button>
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
-            Asignar Rutinas
+          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <MessageCircle size={16} />
+            Ver Chat
           </button>
-          <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+          <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <TrendingUp size={16} />
             Ver Progreso
           </button>
+        </div>
+      </div>
+      */}
+
+      {/* Resumen rápido real */}
+      <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-xl p-4 border border-white/10 mb-6">
+        <h3 className="text-sm font-semibold text-white mb-3">Resumen Rápido</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center">
+            <div className="text-lg font-bold text-orange-400">{totalUsers}</div>
+            <div className="text-xs text-slate-400">Usuarios</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-green-400">{activeUsers}</div>
+            <div className="text-xs text-slate-400">Activos</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-red-400">{inactiveUsers}</div>
+            <div className="text-xs text-slate-400">Inactivos</div>
+          </div>
         </div>
       </div>
     </div>

@@ -144,6 +144,28 @@ const userAdapter = {
       }
       throw error;
     }
+  },
+
+  async generateRoutineWithAI({ name, level, focus, tipo = 'full body' }: { name: string; level: string; focus: string; tipo?: string }): Promise<any> {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      const response = await axios.post(
+        `${API_URL}/trainer/routines/generate`,
+        { name, level, focus, tipo },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.detail || 'Error al generar rutina con IA');
+      }
+      throw error;
+    }
   }
 };
 

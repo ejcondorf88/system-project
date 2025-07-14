@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Body
 from sqlalchemy.orm import Session
 from database.database import get_db
 from database import models
@@ -9,6 +9,11 @@ from typing import List
 from schemas.user import RoutineCreate, UserRoutineCreate
 from schemas.chat import ChatMessageResponse
 from services.audit_service import AuditService
+from fastapi import Body
+from langchain_openai import ChatOpenAI
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 router = APIRouter(
     tags=["Trainer"]
@@ -329,8 +334,6 @@ def mark_routine_completed(
     current_user: User = Depends(get_current_user)
 ):
     """Marcar rutina como completada (solo entrenadores)"""
-    check_trainer_permissions(current_user)
-    
     user_routine = db.query(models.UserRoutine).filter(models.UserRoutine.id == user_routine_id).first()
     if not user_routine:
         raise HTTPException(status_code=404, detail="Asignación de rutina no encontrada")
@@ -657,3 +660,48 @@ def get_chat_analytics(
         "total_users_with_chat": len(analytics),
         "analytics": analytics
     } 
+
+# --- Endpoint para generar rutina con OpenAI ---
+@router.post("/routines/generate")
+def generate_routine_with_openai(
+    name: str = Body(...),
+    level: str = Body(...),
+    focus: str = Body(...),
+    tipo: str = Body("full body"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Genera una tabla de ejercicios para una rutina usando OpenAI"""
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not openai_key or openai_key == "tu_clave_de_openai_aqui":
+        raise HTTPException(status_code=500, detail="OpenAI API Key no configurada")
+    llm = ChatOpenAI(model_name='gpt-3.5-turbo', temperature=0)
+    prompt = f"""
+Eres un entrenador personal experto. Genera una tabla de ejercicios para una rutina {tipo} nivel {level} enfocada en {focus}. Devuelve la respuesta en formato JSON con el siguiente formato:
+[
+  {{
+    "name": "Nombre del ejercicio",
+    "series": "número de series",
+    "reps": "repeticiones",
+    "rir": "RIR",
+    "tempo": "ritmo de ejecución",
+    "rest": "descanso"
+  }}, ...
+]
+Solo responde con el JSON, sin explicaciones ni texto adicional. Ejemplo:
+[
+  {{"name": "Press pecho máquina", "series": "3", "reps": "12/15", "rir": "2-3", "tempo": "3-1", "rest": "1'-1'30"}},
+  ...
+]
+"""
+    try:
+        response = llm.invoke(prompt)
+        # Buscar el primer bloque JSON en la respuesta
+        import re, json
+        match = re.search(r'\[.*\]', response.content, re.DOTALL)
+        if not match:
+            raise Exception("No se encontró JSON en la respuesta de OpenAI")
+        exercises = json.loads(match.group(0))
+        return {"exercises": exercises}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generando rutina: {str(e)}") 
