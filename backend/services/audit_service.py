@@ -4,6 +4,7 @@ from schemas.audit import AuditLogCreate
 from typing import Optional, Any
 import json
 from datetime import datetime
+from sqlalchemy import func
 
 class AuditService:
     @staticmethod
@@ -168,18 +169,18 @@ class AuditService:
         # Usuario más activo
         most_active_user = db.query(
             models.User.username,
-            db.func.count(models.AuditLog.id).label('action_count')
+            func.count(models.AuditLog.id).label('action_count')
         ).join(models.AuditLog, models.User.id == models.AuditLog.user_id)\
          .group_by(models.User.id, models.User.username)\
-         .order_by(db.func.count(models.AuditLog.id).desc())\
+         .order_by(func.count(models.AuditLog.id).desc())\
          .first()
         
         # Tabla más modificada
         most_modified_table = db.query(
             models.AuditLog.table_name,
-            db.func.count(models.AuditLog.id).label('action_count')
+            func.count(models.AuditLog.id).label('action_count')
         ).group_by(models.AuditLog.table_name)\
-         .order_by(db.func.count(models.AuditLog.id).desc())\
+         .order_by(func.count(models.AuditLog.id).desc())\
          .first()
         
         # Actividad reciente
